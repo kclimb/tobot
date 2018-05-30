@@ -12,7 +12,7 @@ class MyRCClient(IRCClient):
 ghbnex = socket.gethostbyname_ex('irc.chat.twitch.tv')
 print ghbnex
 #print socket.getaddrinfo(ghbnex[0], 443, socket.AF_INET6)
-opass = 'oauth:qmr96t6q9qqf64w0pje93pmv6bxq4p'
+opass = ''
 s = socket.create_connection(('irc.chat.twitch.tv', 6667))
 print 'client connected'
 num = s.send('PASS ' + opass + '\n')
