@@ -1,10 +1,12 @@
+import select
 import socket
 import ssl
+import time
 
 class IRCClient:
 	pass
 
-TWITCH_SERVER = 'irc.chat.twitch.tv'
+TWITCH_SERVER = 'irc.chat.twitch.tv' # Default connection hostname. Bot currently only supports Twitch, no plans to change that
 BOT_NAME = 'toburobo'
 DEFAULT_CHANNEL = 'toburr'
 DEFAULT_RECV_BUFSIZE = 4096
@@ -28,6 +30,7 @@ class InsecureMyRCClient(IRCClient):
 		self.channel = None
 		self.numwrites = 0 # Used to track whether bot is approaching a spam-ban
 		self.is_connected = False # Won't send messages if not connected
+		self.empty_m_flag = False
 
 	# Needs to know:
 	#	- client name (always toburobo, currently)
@@ -37,72 +40,102 @@ class InsecureMyRCClient(IRCClient):
 		"""
 		Connects this client to a specific user's chatroom
 		"""
-		# Disable connection if necessary
-		self.is_connected = False
-
+		
 		# Initial connection
 		if not self.socket or not self.channel:
-			new_socket = self._make_socket()
-			if not new_socket:
-				print 'ERROR'
-				return
-			if self.verbose:
-				print 'Connected to ' + str(new_socket.getpeername())
-			self._twitch_login(new_socket)
+			new_socket = self._make_and_login()
+			# Disable connection if necessary
+			self.is_connected = False
 			self.socket = new_socket
+		# Already connected, just changing channels
 		else:
 			if self.verbose:
 				print 'Departing from channel ' + self.channel + '...'
-			self.socket.send('PART #' + self.channel)
-			self.socket.recv(1024)
+			# Disable connection if necessary
+			self.is_connected = False
+			self.socket.sendall('PART #' + self.channel + '\n')
+			m = self.socket.recv(1024)
 			if self.verbose:
 				print 'Successfully left #' + self.channel + '.'
+				print 'Part response: ' + m
 			self.channel = None
 
+		self._join_channel(self.socket, chan)
 
-		if self.verbose:
-			print 'Joining channel ' + chan + '...'
-		self.socket.send('JOIN #' + chan + '\n')
-		for i in xrange(2):
-			self.socket.recv(1024)
-		if self.verbose:
-			print 'Successfully joined #' + chan + '.'
-		self.channel = chan
+		return True
 
-		self.is_connected = True
+	def gethostname(self):
+		return self.host
 
-	def send(self, message):
-		if self.is_connected:
-			if self.verbose:
-				print 'Sending message...'
-			self.socket.sendall('PRIVMSG #' + self.channel + ' :' + message + '\n')
-			self.socket.recv(1024)
-			if self.verbose:
-				print 'Successfully sent message'
-			return True
-		if self.verbose:
-			print 'Error: client currently not connected to channel. Message not sent'
-		return False
-
-	def recv(self, bufsize=DEFAULT_RECV_BUFSIZE):
-		if self.is_connected:
-			if self.verbose:
-				print 'Listening for message...'
-			m = self.socket.recv(bufsize)
-			if self.verbose:
-				print 'Message received'
-			return m
-		if self.verbose:
-			print "Error: client currently not connected to channel. Can't receive messages"
-		return None
+	def getsocket(self):
+		"""
+		Returns this client's networking socket.
+		"""
+		return self.socket
 
 	def pong(self):
 		"""
 		Tell Twitch we're alive.
 		"""
-		self.socket.sendall('PONG :tmi.twitch.tv')
-		if self.verbose():
+		self.socket.sendall('PONG :tmi.twitch.tv\n'.encode('utf-8'))
+		if self.verbose:
 			print 'pong'
+
+	def recv(self, bufsize=DEFAULT_RECV_BUFSIZE):
+		if self.is_connected:
+			if self.verbose and not self.empty_m_flag:
+				print 'Listening for message...'
+			# Use select so that our client's recv blocks (or at least waits)
+			# regardless of whether the socket does
+			sock_ready = select.select([self.socket], [], [])
+			while not sock_ready[0]:
+				# We shouldn't get here, but if we do, try again
+				sock_ready = select.select([self.socket], [], [])
+			m = self.socket.recv(bufsize).decode()
+			if len(m) < 1:
+				if not self.empty_m_flag:
+					print 'Disconnected from irc server!'
+					# TODO: properly handle the disconnection
+					self.empty_m_flag = True
+			elif self.verbose:
+				print 'Message received:'
+				print m
+				self.empty_m_flag = False
+			return m
+		if self.verbose:
+			print "Error: client currently not connected to channel. Can't receive messages"
+		return None
+
+	def refresh(self):
+		"""
+		Resets connection to current channel
+		TODO: finish implementing me
+		"""
+		new_socket = self._make_and_login()
+
+	def send_message(self, message):
+		if self.is_connected:
+			if self.verbose:
+				print 'Sending message...'
+			self.socket.sendall('PRIVMSG #' + self.channel + ' :' + message + '\n')
+			m = self.socket.recv(1024).decode()
+			if self.verbose:
+				print 'Successfully sent message ' + message
+				print 'Received response ' + m
+			self.numwrites += 1
+			return True
+		if self.verbose:
+			print 'Error: client currently not connected to channel. Message not sent'
+		return False
+
+	def sethostname(self, newname):
+		if self.is_connected:
+			# TODO: Raise "Bot is running" exception instead
+			e = "Error: could not change hostname because client is already connected to a server."
+			e += '\nPlease disconnect from the current server to change the hostname.'
+			print e
+		else:
+			self.hostname = newname
 
 	def _make_socket(self):
 		"""
@@ -120,24 +153,70 @@ class InsecureMyRCClient(IRCClient):
 		sock.sendall('PASS oauth:' + self.oauth + '\nNICK toburobo\n')
 		if self.verbose:
 			print 'receiving login response...'
-		sock.recv(1024)
+		x = sock.recv(1024)
 		if self.verbose:
 			print 'login response received.'
+			print x
 			print 'requesting membership...'
 		sock.sendall('CAP REQ :twitch.tv/membership\n')
-		sock.recv(1024)
+		x = sock.recv(1024)
 		if self.verbose:
 			print 'received membership.'
+			print x
 			print 'requesting tags...'
-		sock.send('CAP REQ :twitch.tv/tags\n')
-		sock.recv(1024)
+		sock.sendall('CAP REQ :twitch.tv/tags\n')
+		x = sock.recv(1024)
 		if self.verbose:
 			print 'received tags.'
+			print x
 			print 'requesting commands...'
-		sock.send('CAP REQ :twitch.tv/commands\n')
-		sock.recv(1024)
+		sock.sendall('CAP REQ :twitch.tv/commands\n')
+		x = sock.recv(1024)
 		if self.verbose:
 			print 'received commands.'
+			print x
+			print 'Login successful.'
+
+	def _make_and_login(self):
+		"""
+		Internal onvenience function that does both of the above two at once,
+		and also throws in some whistling.
+		"""
+		new_socket = self._make_socket()
+		if not new_socket:
+			print 'ERROR creating socket'
+			return
+		if self.verbose:
+			print 'Connected to ' + str(new_socket.getpeername())
+		self._twitch_login(new_socket)
+		return new_socket
+
+	def _join_channel(self, sock, chan):
+		"""
+		Internal function that given a logged-in socket,
+		joins a given channel.
+		"""
+		if self.verbose:
+			print 'Joining channel ' + chan + '...'
+		sock.sendall('JOIN #' + chan + '\n')
+		for i in xrange(2):
+			x = sock.recv(1024)
+			if self.verbose:
+				print x
+		if self.verbose:
+			print 'Successfully joined #' + chan + '.'
+		self.channel = chan
+		if sock is self.socket:
+			self.is_connected = True
+
+	def _part_channel(self, sock, chan):
+		"""
+		Internal function that given a logged-in socket currently in a channel,
+		has the socket depart that channel.
+		"""
+		if self.verbose:
+			print ''
+
 
 
 
@@ -145,9 +224,9 @@ f = open('mydata.txt')
 oauth = f.read()
 c = InsecureMyRCClient(oauth)
 c.connect('toburr')
-c.send('Hi :)')
+c.send_message('Hi :)')
 while True:
 	m = c.recv()
-	print m
 	if m.startswith('PING :tmi.twitch.tv'):
 		c.pong()
+	time.sleep(5)
