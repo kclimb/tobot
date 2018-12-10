@@ -30,7 +30,6 @@ class InsecureMyRCClient(IRCClient):
 		self.channel = None
 		self.numwrites = 0 # Used to track whether bot is approaching a spam-ban
 		self.is_connected = False # Won't send messages if not connected
-		self.empty_m_flag = False
 
 	# Needs to know:
 	#	- client name (always toburobo, currently)
@@ -83,7 +82,7 @@ class InsecureMyRCClient(IRCClient):
 
 	def recv(self, bufsize=DEFAULT_RECV_BUFSIZE):
 		if self.is_connected:
-			if self.verbose and not self.empty_m_flag:
+			if self.verbose:
 				print 'Listening for message...'
 			# Use select so that our client's recv blocks (or at least waits)
 			# regardless of whether the socket does
@@ -92,15 +91,17 @@ class InsecureMyRCClient(IRCClient):
 				# We shouldn't get here, but if we do, try again
 				sock_ready = select.select([self.socket], [], [])
 			m = self.socket.recv(bufsize).decode()
-			if len(m) < 1:
-				if not self.empty_m_flag:
-					print 'Disconnected from irc server!'
-					# TODO: properly handle the disconnection
-					self.empty_m_flag = True
+			# ms = m.split('\r\n')
+			# for guy in ms:
+			# 	print '"' + guy + '"'
+			# print 'ms len =', len(ms)
+			if len(m) == 0:
+				print 'Error: disconnected from irc server!'
+				self.is_connected = False
+				# TODO: properly handle the disconnection
 			elif self.verbose:
 				print 'Message received:'
 				print m
-				self.empty_m_flag = False
 			return m
 		if self.verbose:
 			print "Error: client currently not connected to channel. Can't receive messages"
@@ -225,8 +226,9 @@ oauth = f.read()
 c = InsecureMyRCClient(oauth)
 c.connect('toburr')
 c.send_message('Hi :)')
+#c.socket.sendall('NAMES #toburr\n')
 while True:
 	m = c.recv()
 	if m.startswith('PING :tmi.twitch.tv'):
 		c.pong()
-	time.sleep(5)
+	time.sleep(8)

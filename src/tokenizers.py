@@ -19,3 +19,10 @@ class WhitespaceTokenizer(Tokenizer):
 		tokens = message.split()
 		return tokens
 
+class TwitchIRCMsgTokenizer(Tokenizer):
+	"""
+	A tokenizer that divides a message into headers and messages
+	"""
+	def tokenize(self, message):
+		halves = message.split('')
+

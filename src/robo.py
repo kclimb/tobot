@@ -1,40 +1,36 @@
 import commandler as handler
+import netclient as client
 #import threading
 
 class Robo:
 	"""
-	Manages all the business of the process (in contrast to any front-facing UI)
+	Manages all the business of the process (in contrast to any front-facing UI (for which currently there are no plans (but you never know, y'know?)))
 	"""
-	def __init__(self, servname = None):
-		self.hostname = servname # TODO: Move to netclient
+	def __init__(self, netpass):
 		self.running = False
-		self.client = None
+		self.client = client.InsecureMyRCClient(netpass)
 		self.handler = None
 
 	def start(self):
-		self.running = True
+		succ = self.client.connect()
+		if succ:
+			self.running = True
+		else:
+			print 'ERROR when starting robo :('
 
 	def stop(self):
 		self.running = False
 
+	def send(self, message):
+		self.client.send(message)
+
+	def recv(self):
+		return self.client.recv()
+
 	def isrunning(self):
 		return self.running
 
-	# TODO: Move to netclient
-	def gethostname(self):
-		return self.hostname
-
-	# TODO: Move to netclient
-	def sethostname(self, newname):
-		if self.running:
-			# TODO: Raise "Bot is running" exception instead
-			e = "Error: could not change hostname because Toburobo is already connected to a server."
-			e += '\nPlease disconnect from the current server to change the hostname.'
-			print e
-		else:
-			self.hostname = newname
-
-r = Robo()
-r.handler = handler.Handler()
-r.handler.handle('toburobo: !hi')
+# r = Robo()
+# r.handler = handler.Handler()
+# r.handler.handle('toburobo: !hi')
 #print threading.active_count()
