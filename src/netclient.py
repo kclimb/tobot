@@ -3,61 +3,55 @@ import socket
 import ssl
 import time
 
-class IRCClient:
-	pass
-
 TWITCH_SERVER = 'irc.chat.twitch.tv' # Default connection hostname. Bot currently only supports Twitch, no plans to change that
 BOT_NAME = 'toburobo'
 DEFAULT_CHANNEL = 'toburr'
 DEFAULT_RECV_BUFSIZE = 4096
+
+class IRCClient:
+	def __init__(self, opass, hostname, r_size, v):
+		self.host = hostname
+		self.oauth = opass
+		self.read_size = r_size
+		self.socket = None
+		self.channels = set([])
+		self.numwrites = 0 # Used to track whether bot is approaching a spam-ban
+		self.is_connected = False # Won't send messages if not connected
+		self.verbose = v
+
 
 class InsecureMyRCClient(IRCClient):
 	"""
 	Twitch IRC client which DOES NOT have TLS enabled (writing this for the
 	sake of getting working code for alpha. Will deprecate by version 1.0)
 	"""
-	def __init__(self, opass, hostname=TWITCH_SERVER, port=6667, v=True):
+	def __init__(self, opass, hostname=TWITCH_SERVER, port=6667, r_size=DEFAULT_RECV_BUFSIZE, v=True):
 		"""
 		Initialize connection info. Non OAuth parameters are provided to allow
 		flexibility (to maybe connect to non-Twitch hosts). If you're
 		connecting to Twitch, don't bother passing arguments.
 		"""
-		self.host = hostname
+		IRCClient.__init__(self, opass, hostname, r_size, v)
 		self.port = 6667
-		self.oauth = opass
-		self.verbose = v
-		self.socket = None
-		self.channel = None
-		self.numwrites = 0 # Used to track whether bot is approaching a spam-ban
-		self.is_connected = False # Won't send messages if not connected
 
 	# Needs to know:
-	#	- client name (always toburobo, currently)
+	#	- client name (always toburobo)
 	#	- client's oauth token (toburobo's oauth token: not included in this code because secrets)
 	#	- channel to be a part of (can be any twitch user channel; defaults to Toburr)
 	def connect(self, chan=DEFAULT_CHANNEL):
 		"""
 		Connects this client to a specific user's chatroom
 		"""
-		
+
 		# Initial connection
-		if not self.socket or not self.channel:
+		if not self.socket or not self.channels or len(self.channels) == 0:
 			new_socket = self._make_and_login()
 			# Disable connection if necessary
 			self.is_connected = False
 			self.socket = new_socket
 		# Already connected, just changing channels
 		else:
-			if self.verbose:
-				print 'Departing from channel ' + self.channel + '...'
-			# Disable connection if necessary
-			self.is_connected = False
-			self.socket.sendall('PART #' + self.channel + '\n')
-			m = self.socket.recv(1024)
-			if self.verbose:
-				print 'Successfully left #' + self.channel + '.'
-				print 'Part response: ' + m
-			self.channel = None
+			self._part_channel(self.socket, chan)
 
 		self._join_channel(self.socket, chan)
 
@@ -80,7 +74,9 @@ class InsecureMyRCClient(IRCClient):
 		if self.verbose:
 			print 'pong'
 
-	def recv(self, bufsize=DEFAULT_RECV_BUFSIZE):
+	def recv(self, bufsize=None):
+		if bufsize == None:
+			bufsize = self.read_size
 		if self.is_connected:
 			if self.verbose:
 				print 'Listening for message...'
@@ -103,7 +99,7 @@ class InsecureMyRCClient(IRCClient):
 				print 'Message received:'
 				print m
 			return m
-		if self.verbose:
+		elif self.verbose:
 			print "Error: client currently not connected to channel. Can't receive messages"
 		return None
 
@@ -114,17 +110,20 @@ class InsecureMyRCClient(IRCClient):
 		"""
 		new_socket = self._make_and_login()
 
-	def send_message(self, message):
+	def send_message(self, message, chan=DEFAULT_CHANNEL):
 		if self.is_connected:
 			if self.verbose:
 				print 'Sending message...'
-			self.socket.sendall('PRIVMSG #' + self.channel + ' :' + message + '\n')
-			m = self.socket.recv(1024).decode()
-			if self.verbose:
-				print 'Successfully sent message ' + message
-				print 'Received response ' + m
-			self.numwrites += 1
-			return True
+			if chan in self.channels:
+				self.socket.sendall('PRIVMSG #' + chan + ' :' + message + '\n')
+				m = self.socket.recv(1024).decode()
+				if self.verbose:
+					print 'Successfully sent message ' + message
+					print 'Received response ' + m
+				self.numwrites += 1
+				return True
+			elif self.verbose:
+				print 'Error: client not currently connected to channel: ' + chan
 		if self.verbose:
 			print 'Error: client currently not connected to channel. Message not sent'
 		return False
@@ -151,7 +150,8 @@ class InsecureMyRCClient(IRCClient):
 		Then fetches capabilities from server.
 		Throws error if self.socket doesn't exist or is disconnected.
 		"""
-		sock.sendall('PASS oauth:' + self.oauth + '\nNICK toburobo\n')
+		# First, connect to twitch server with our credentials
+		sock.sendall('PASS oauth:' + self.oauth + '\nNICK toburobo\n') # TODO: generalize bot name stuff
 		if self.verbose:
 			print 'receiving login response...'
 		x = sock.recv(1024)
@@ -206,7 +206,7 @@ class InsecureMyRCClient(IRCClient):
 				print x
 		if self.verbose:
 			print 'Successfully joined #' + chan + '.'
-		self.channel = chan
+		self.channels.add(chan)
 		if sock is self.socket:
 			self.is_connected = True
 
@@ -216,9 +216,14 @@ class InsecureMyRCClient(IRCClient):
 		has the socket depart that channel.
 		"""
 		if self.verbose:
-			print ''
-
-
+			print 'Departing from channel ' + chan + '...'
+		self.is_connected = False	# Disable connection if necessary
+		sock.sendall('PART #' + chan + '\n')	# This is the Leave IRC command
+		m = sock.recv(self.read_size)
+		if m != None and self.verbose:
+			print 'Successfully left #' + chan + '.'
+			print 'Part response: ' + m
+		self.channels.remove(chan)
 
 
 f = open('mydata.txt')
@@ -231,4 +236,5 @@ while True:
 	m = c.recv()
 	if m.startswith('PING :tmi.twitch.tv'):
 		c.pong()
-	time.sleep(8)
+	elif 'ctrlc' in m:
+		break
