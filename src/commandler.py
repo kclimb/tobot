@@ -12,6 +12,9 @@ class Handler:
 	######################## Message Separation Routines ######################
 	# Listed first so we can map message types to these routines later.
 
+	def _separate_clear_user_chat(self, msg):
+		return {'type': 'CLEARUSERCHAT'}
+
 	def _separate_clearchat(self, msg):
 		return {'type': 'CLEARCHAT'}
 
@@ -27,10 +30,11 @@ class Handler:
 		name = msg[1:excla]
 		rest = msg[firstspace + 1:]
 		secspace = rest.index(' ')
-		return {'name': name, 'type': rest[:secspace]}
+		endline = rest.index('\r\n')
+		return {'channel': rest[secspace+2:endline], 'name': name, 'type': rest[:secspace]}
 
 	def _separate_mode(self, msg):
-		return {'type': 'MODE'}
+		return {'msg': msg[10:], 'type': 'MODE'}
 
 	def _separate_names(self, msg):
 		return {'type': 'NAMES'}
@@ -48,6 +52,7 @@ class Handler:
 		"""
 		Handles the separation of PRIVMSG messages
 		"""
+
 		return {'type': 'PRIVMSG'}
 
 	def _separate_roomstate(self, msg):
@@ -61,7 +66,7 @@ class Handler:
 
 	############################# Handler Routines ############################
 
-	RAW_PREFIXES = {'PING': _pong, ':': _joinpart}
+	#RAW_PREFIXES = {'PING': _pong, ':': _joinpart}
 	MSG_DELIMITER = '\r\n'
 
 	def __init__(self, p = parsers.MapParser(), d = MSG_DELIMITER, v = True):
@@ -80,27 +85,32 @@ class Handler:
 		"""
 		if inputmsg.startswith('PING :tmi.twitch.tv'):
 			# PING
-			return self._pong()
+			return self._separate_pong()
 		elif inputmsg.startswith(':jtv MODE'):
 			# MODE
-			return '', 'MODE', inputmsg[10:]
-		elif inputmsg.startswith('@badges='):
-			if ".tmi.twitch.tv PRIVMSG #" in inputmsg:
-				return self._privmsg(inputmsg)
-			elif " :tmi.twitch.tv USERSTATE #" in inputmsg:
-				return self._userstate(inputmsg)
-		elif " :tmi.twitch.tv ROOMSTATE #" in inputmsg:
-			return self._roomstate()
-		elif " :tmi.twitch.tv USERNOTICE #" in inputmsg:
-			return self._usernotice()
-		firstspace = inputmsg.index(" ")
-		headers = inputmsg[:firstspace]
-		rest = inputmsg[firstspace + 1:]
-		secspace = rest.index(" ")
-		rest2 = rest[secspace + 1:]
-		thirdspace = rest2.index(" ")
-		#if inputmsg[0] = '@':
-		return headers, cmd, rest[secspace + 1:]
+			return self._separate_mode(inputmsg)
+		elif inputmsg.startswith("@msg-id="):
+			return self._separate_usernotice(inputmsg)
+		elif inputmsg.startswith("@broadcaster-lang="):
+			return self._separate_roomstate(inputmsg)
+		elif inputmsg.startswith("@ban-reason="):
+			return self._separate_clear_user_chat(inputmsg)
+		elif inputmsg.startswith("@room-id="):
+			return self._separate_clearchat(inputmsg)
+		else:
+			firstspace = inputmsg.index(" ")
+			headers = inputmsg[:firstspace]
+			rest = inputmsg[firstspace + 1:]
+			secspace = rest.index(" ")
+			rest2 = rest[secspace + 1:]
+			thirdspace = rest2.index(" ")
+			if inputmsg.startswith('@badges='):
+				if rest2.startswith("PRIVMSG #") in inputmsg:
+					return self._separate_privmsg(inputmsg)
+				elif rest2.startswith("USERSTATE #") in inputmsg:
+					return self._separate_userstate(inputmsg)
+		#return headers, cmd, rest[secspace + 1:]
+		return {'type': 'UNKNOWN'}
 
 	def eval(self, cmd, args):
 		return cmd(*args)
@@ -132,17 +142,13 @@ class Handler:
 		if len(msgs) > 0:
 			self.msg_q[-1] += msgs[0]
 			for msg in msgs[1:]:
-				# Give priority to PINGs as long as the PING was fully sent
-				if msg == 'PING :tmi.twitch.tv' and msg != msgs[-1]:
-					self.msg_q.insert(0, msg)
-				else:
-					self.msg_q.append(msg)
+				self.msg_q.append(msg)
 		#print 'queue size', len(self.msg_q) - 1
 
 
 # Message examples:
-clearchat_ex = "@ban-reason=;room-id=77780959;target-user-id=236791797;tmi-sent-ts=1534813739972 :tmi.twitch.tv CLEARCHAT #toburr :decafsmurf\r\n"
-clearchat2_ex = "@room-id=77780959;tmi-sent-ts=1534835137593 :tmi.twitch.tv CLEARCHAT #toburr\r\n"
+clearchat_ex = "@ban-reason=;room-id=77780959;target-user-id=236791797;tmi-sent-ts=1534813739972 :tmi.twitch.tv CLEARCHAT #toburr :decafsmurf\r\n" # single user clear
+clearchat2_ex = "@room-id=77780959;tmi-sent-ts=1534835137593 :tmi.twitch.tv CLEARCHAT #toburr\r\n" # Whole chat clear
 hosttarget_ex = ":tmi.twitch.tv HOSTTARGET #toburr :- 0\r\n"
 join_ex = ":toburr!toburr@toburr.tmi.twitch.tv JOIN #toburr\r\n"
 mode_ex = ":jtv MODE #toburr +o toburobo\r\n"
