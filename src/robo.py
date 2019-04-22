@@ -9,7 +9,7 @@ class Robo:
 	def __init__(self, netpass):
 		self.running = False
 		self.client = client.InsecureMyRCClient(netpass)
-		self.handler = None
+		self.handler = handler.Handler()
 
 	def start(self):
 		if not self.running:
@@ -39,10 +39,10 @@ class Robo:
 		return ""
 
 	def handle(self, message):
-		if m.startswith('PING :tmi.twitch.tv'):
+		if message.startswith('PING :tmi.twitch.tv'):
 			self.client.pong()
 			return "pong"
-		elif m.endswith('ctrlc\r\n'):
+		elif message.endswith('ctrlc\r\n'):
 			return "STOP"
 		return ""
 

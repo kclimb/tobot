@@ -1,7 +1,7 @@
 import commands as commands
 import parsers as parsers
 import re
-
+privmsg_ex = "@badges=broadcaster/1,premium/1;color=#106F73;display-name=Toburr;emotes=;id=c17fbc52-e48c-4f6f-9e5d-be7ed47d7404;mod=0;room-id=77780959;subscriber=0;tmi-sent-ts=1534012954836;turbo=0;user-id=77780959;user-type= :toburr!toburr@toburr.tmi.twitch.tv PRIVMSG #toburr :5\r\n"
 class Handler:
 	"""
 	A handler that takes raw Twitch IRC input and does format-specific
@@ -11,6 +11,14 @@ class Handler:
 
 	######################## Message Separation Routines ######################
 	# Listed first so we can map message types to these routines later.
+
+	def _parse_headers(self, headers):
+		"""
+		Used by several of the subsequent "_separate" routines to parse message
+		headers.
+		"""
+		hdrs = headers[1:]
+		return hdrs.split(';')
 
 	def _separate_clear_user_chat(self, msg):
 		return {'type': 'CLEARUSERCHAT'}
@@ -50,10 +58,13 @@ class Handler:
 
 	def _separate_privmsg(self, msg):
 		"""
-		Handles the separation of PRIVMSG messages
+		Handles the separation of PRIVMSG messages (aka "chat" messages)
 		"""
-
-		return {'type': 'PRIVMSG'}
+		firstspace = msg.index(' ')
+		headers = msg[:firstspace]
+		rest = msg[firstspace+1:]
+		second = rest.index(' ')
+		return {'headers': self._parse_headers(headers), 'type': 'PRIVMSG'}
 
 	def _separate_roomstate(self, msg):
 		return {'type': 'ROOMSTATE'}
@@ -121,17 +132,17 @@ class Handler:
 		"""
 		if len(self.msg_q) > 1:
 			raw_msg = self.msg_q.pop(0)
-			headers, comd, message = self._parse_raw_msg(raw_msg)
-			print headers, '|', comd, '|', message
-			cmds = self.parser.translate(message)
-			for cmd in cmds:
-				if self.verbose:
-					print 'Handler says', cmd
-					print self.eval(cmd[0], cmd[1])
+			message = self._parse_raw_msg(raw_msg)
+			#cmds = self.parser.translate(message)
+			#for cmd in cmds:
+			#	if self.verbose:
+			#		print 'Handler says', cmd
+			#		print self.eval(cmd[0], cmd[1])
+			return message
 		else:
 			if self.verbose:
 				print 'Nothing currently in message queue'
-			return 0
+			return {}
 
 	def update_msg_queue(self, sockstream):
 		"""
@@ -140,7 +151,16 @@ class Handler:
 		"""
 		msgs = sockstream.split(self.delimeter)
 		if len(msgs) > 0:
-			self.msg_q[-1] += msgs[0]
+			# The first message gets appended onto the last queue item
+			if msgs[0].startswith('\n') and self.msg_q[-1].endswith('\r'):
+				# handle case where EOL delimeter was split between messages
+				last_msg_len = len(self.msg_q[-1])
+				self.msg_q[-1] = self.msg_1[-1][:last_msg_len-1]
+				msgs[0] = msgs[0][1:]
+			else:
+				# 99.999% of cases
+				self.msg_q[-1] += msgs[0]
+			# Add all the other messages to the queue
 			for msg in msgs[1:]:
 				self.msg_q.append(msg)
 		#print 'queue size', len(self.msg_q) - 1
