@@ -12,20 +12,39 @@ class Robo:
 		self.handler = None
 
 	def start(self):
-		succ = self.client.connect()
-		if succ:
-			self.running = True
+		if not self.running:
+			succ = self.client.connect() # Default method connects to toburr
+			if succ:
+				self.running = True
+			else:
+				print 'ERROR when starting robo :('
+				self.running = False
 		else:
-			print 'ERROR when starting robo :('
+			print "already running, can't start"
 
 	def stop(self):
 		self.running = False
 
 	def send(self, message):
-		self.client.send(message)
+		if self.running:
+			self.client.send(message)
+		else:
+			print "Robo not running. Can't send message."
 
 	def recv(self):
-		return self.client.recv()
+		if self.running:
+			return self.client.recv()
+		else:
+			print "Robo not running. Can't receive message."
+		return ""
+
+	def handle(self, message):
+		if m.startswith('PING :tmi.twitch.tv'):
+			self.client.pong()
+			return "pong"
+		elif m.endswith('ctrlc\r\n'):
+			return "STOP"
+		return ""
 
 	def isrunning(self):
 		return self.running

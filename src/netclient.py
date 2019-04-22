@@ -46,8 +46,8 @@ class InsecureMyRCClient(IRCClient):
 			if verbose:
 				print 'Already in the specified channel'
 			return False
-		# Initial connection
-		if not self.socket or not self.channels or len(self.channels) == 0:
+		# Set up socket if it's our first connection
+		if not self.socket:
 			new_socket = self._make_and_login()
 			# Disable connection if necessary
 			self.is_connected = False

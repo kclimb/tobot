@@ -139,7 +139,7 @@ class Handler:
 					self.msg_q.append(msg)
 		#print 'queue size', len(self.msg_q) - 1
 
-	 
+
 # Message examples:
 clearchat_ex = "@ban-reason=;room-id=77780959;target-user-id=236791797;tmi-sent-ts=1534813739972 :tmi.twitch.tv CLEARCHAT #toburr :decafsmurf\r\n"
 clearchat2_ex = "@room-id=77780959;tmi-sent-ts=1534835137593 :tmi.twitch.tv CLEARCHAT #toburr\r\n"

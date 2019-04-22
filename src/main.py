@@ -14,8 +14,10 @@ def main():
 	r = robo.Robo(opass)
 	r.start()
 	r.send('hi from main')
-	print r.recv()
+	handle_result = ""
+	while handle_result != "STOP":
+		m = r.recv()
+		handle_result = r.handle(m)
 
 if __name__ == "__main__":
     main()
-    
