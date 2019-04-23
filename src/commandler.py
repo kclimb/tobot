@@ -138,9 +138,16 @@ class Handler:
 		# print 'unknown command'
 		return {'type': 'UNKNOWN'}
 
-	def _do_commands(self, command_list):
+	def _get_extra_params(self, cmd, data):
+		return []
+
+	def _do_commands(self, command_list, data):
 		responses = []
 		for cmd in command_list:
+			try:
+				extra_params = self._get_extra_params(cmd, data)
+			except KeyError:
+				extra_params = []
 			cmd_result = cmd[0](*(cmd[1]))
 			if cmd_result != None and cmd_result != "":
 				responses.append(cmd_result)
@@ -163,7 +170,7 @@ class Handler:
 		elif msgtype == 'PRIVMSG':
 			command_list = self.parser.translate(data['message'])
 
-			return (self._do_commands(command_list),True)
+			return (self._do_commands(command_list, data),True)
 		return ([],True)
 
 	def eval(self, cmd, args):
