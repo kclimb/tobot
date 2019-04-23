@@ -2,11 +2,13 @@ import commandler as handler
 import netclient as client
 #import threading
 
+#RAW_PREFIXES = {'PING': client.pong, ':': _joinpart}
+
 class Robo:
 	"""
 	Manages all the business of the process (in contrast to any front-facing UI (for which currently there are no plans (but you never know, y'know?)))
 	"""
-	def __init__(self, netpass):
+	def __init__(self, netpass, ):
 		self.running = False
 		self.client = client.InsecureMyRCClient(netpass)
 		self.handler = handler.Handler()
@@ -27,24 +29,27 @@ class Robo:
 
 	def send(self, message):
 		if self.running:
-			self.client.send(message)
+			self.client.send_message(message)
 		else:
 			print "Robo not running. Can't send message."
 
 	def recv(self):
 		if self.running:
-			return self.client.recv()
+			data = self.client.recv()
+			if data.endswith('ctrlc\r\n') and 'badges=broadcaster' in data[:data.index(' ')]:
+				return -1
+			self.handler.update_msg_queue(data)
 		else:
 			print "Robo not running. Can't receive message."
 		return ""
 
-	def handle(self, message):
-		if message.startswith('PING :tmi.twitch.tv'):
-			self.client.pong()
-			return "pong"
-		elif message.endswith('ctrlc\r\n'):
-			return "STOP"
-		return ""
+	def process(self):
+		responses = self.handler.process_msg()
+		sendcount = 0
+		for resp in responses:
+			self.send(resp)
+			sendcount += 1
+		return sendcount
 
 	def isrunning(self):
 		return self.running

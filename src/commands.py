@@ -5,8 +5,11 @@ All return values must be strings which the bot replies to the IRC server with. 
 the bot to not reply at all
 """
 
-def sayhi(name = ''):
-	return 'hi ' + name + ' :)'
+def sayhi():
+	return 'hi :)'
+
+def sayhello(name):
+	return 'hello '+name+'!'
 
 def nop():
 	return None

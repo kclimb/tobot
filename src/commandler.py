@@ -1,7 +1,7 @@
-import commands as commands
+#import commands as commands
 import parsers as parsers
 import re
-privmsg_ex = "@badges=broadcaster/1,premium/1;color=#106F73;display-name=Toburr;emotes=;id=c17fbc52-e48c-4f6f-9e5d-be7ed47d7404;mod=0;room-id=77780959;subscriber=0;tmi-sent-ts=1534012954836;turbo=0;user-id=77780959;user-type= :toburr!toburr@toburr.tmi.twitch.tv PRIVMSG #toburr :5\r\n"
+
 class Handler:
 	"""
 	A handler that takes raw Twitch IRC input and does format-specific
@@ -29,16 +29,19 @@ class Handler:
 	def _separate_globaluserstate(self, msg):
 		return {'type': 'GLOBALUSERSTATE'}
 
-	def _separate_join(self, msg):
+	def _separate_joinpart(self, msg):
 		"""
-		Handles separation of JOIN messages
+		Handles separation of JOIN and PART messages
 		"""
 		excla = msg.index('!')
 		firstspace = msg.index(' ')
 		name = msg[1:excla]
 		rest = msg[firstspace + 1:]
 		secspace = rest.index(' ')
-		endline = rest.index('\r\n')
+		if '\r\n' in rest:	# For some reason the delimeter isn't there sometimes in testing?
+			endline = rest.index('\r\n')
+		else:
+			endline = len(rest)
 		return {'channel': rest[secspace+2:endline], 'name': name, 'type': rest[:secspace]}
 
 	def _separate_mode(self, msg):
@@ -63,8 +66,14 @@ class Handler:
 		firstspace = msg.index(' ')
 		headers = msg[:firstspace]
 		rest = msg[firstspace+1:]
-		second = rest.index(' ')
-		return {'headers': self._parse_headers(headers), 'type': 'PRIVMSG'}
+		secondspace = rest.index(' ')
+		sender = rest[1:rest.index('!')]
+		rest2 = rest[secondspace+1:]
+		thirdspace = rest2.index(' ')
+		rest3 = rest2[thirdspace+1:]
+		fourthspace = rest3.index(' ')
+		payload = rest3[fourthspace+2:].rstrip('\r\n')
+		return {'from': sender, 'headers': self._parse_headers(headers), 'message': payload, 'type': 'PRIVMSG'}
 
 	def _separate_roomstate(self, msg):
 		return {'type': 'ROOMSTATE'}
@@ -77,7 +86,6 @@ class Handler:
 
 	############################# Handler Routines ############################
 
-	#RAW_PREFIXES = {'PING': _pong, ':': _joinpart}
 	MSG_DELIMITER = '\r\n'
 
 	def __init__(self, p = parsers.MapParser(), d = MSG_DELIMITER, v = True):
@@ -97,9 +105,15 @@ class Handler:
 		if inputmsg.startswith('PING :tmi.twitch.tv'):
 			# PING
 			return self._separate_pong()
+		elif inputmsg.startswith('@badge-info='):
+			return self._separate_privmsg(inputmsg)
 		elif inputmsg.startswith(':jtv MODE'):
 			# MODE
 			return self._separate_mode(inputmsg)
+		elif inputmsg.startswith(':tmi.twitch.tv'):
+			return {'type': 'HOSTTARGET'}
+		elif inputmsg.startswith(':'):
+			return self._separate_joinpart(inputmsg)
 		elif inputmsg.startswith("@msg-id="):
 			return self._separate_usernotice(inputmsg)
 		elif inputmsg.startswith("@broadcaster-lang="):
@@ -123,6 +137,18 @@ class Handler:
 		#return headers, cmd, rest[secspace + 1:]
 		return {'type': 'UNKNOWN'}
 
+	def _generate_responses(self, data):
+		if 'type' not in data:
+			return []
+		else:
+			msgtype = data['type']
+
+		if msgtype == 'PING':
+			return ['PONG :tmi.twitch.tv\n'.encode('utf-8')]
+		elif msgtype == 'PRIVMSG':
+			return self.parser.translate(data['message'])
+		return []
+
 	def eval(self, cmd, args):
 		return cmd(*args)
 
@@ -132,17 +158,12 @@ class Handler:
 		"""
 		if len(self.msg_q) > 1:
 			raw_msg = self.msg_q.pop(0)
-			message = self._parse_raw_msg(raw_msg)
-			#cmds = self.parser.translate(message)
-			#for cmd in cmds:
-			#	if self.verbose:
-			#		print 'Handler says', cmd
-			#		print self.eval(cmd[0], cmd[1])
-			return message
+			data = self._parse_raw_msg(raw_msg)
+			return self._generate_responses(data)
 		else:
 			if self.verbose:
 				print 'Nothing currently in message queue'
-			return {}
+			return []
 
 	def update_msg_queue(self, sockstream):
 		"""
@@ -163,7 +184,6 @@ class Handler:
 			# Add all the other messages to the queue
 			for msg in msgs[1:]:
 				self.msg_q.append(msg)
-		#print 'queue size', len(self.msg_q) - 1
 
 
 # Message examples:
@@ -178,19 +198,3 @@ ping_ex = "PING :tmi.twitch.tv\r\n"
 privmsg_ex = "@badges=broadcaster/1,premium/1;color=#106F73;display-name=Toburr;emotes=;id=c17fbc52-e48c-4f6f-9e5d-be7ed47d7404;mod=0;room-id=77780959;subscriber=0;tmi-sent-ts=1534012954836;turbo=0;user-id=77780959;user-type= :toburr!toburr@toburr.tmi.twitch.tv PRIVMSG #toburr :5\r\n"
 roomstate_ex = "@broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;rituals=0;room-id=77780959;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #toburr\r\n"
 userstate_ex = "@badges=moderator/1;color=;display-name=toburobo;emote-sets=0;mod=1;subscriber=0;user-type=mod :tmi.twitch.tv USERSTATE #toburr\r\n"
-
-# a = re.compile('@badges=')
-# if a.match(privmsg_ex):
-# 	print ':)'
-# else:
-# 	print ':('
-# if a.match('bleep @badges='):
-# 	print ':)'
-# else:
-# 	print ':('
-# Some tests
-# h = Handler()
-# h.update_msg_queue(join_ex + privmsg_ex)
-# #print h._parse_next_msg(join_ex)
-# h.process_msg()
-# h.process_msg()

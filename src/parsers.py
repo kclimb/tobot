@@ -19,15 +19,15 @@ class Parser:
 
 # A default map of supported commands, and the corresponding number of arguments for
 # each command.
-DEFAULT_COMMANDS = {'!hi': commands.sayhi}
-DEFAULT_ARGC = {'!hi': 0}
+DEFAULT_COMMANDS = {'!hi': commands.sayhi, '!hello': commands.sayhello}
+DEFAULT_ARGC = {'!hi': 0, '!hello': 1}
 
 class MapParser(Parser):
 	"""
 	An implementing class of parser that uses a map to translate token keys to
 	behavioral (function object) values
 	"""
-	
+
 	def __init__(self, m = DEFAULT_COMMANDS, a = DEFAULT_ARGC, t = tokenizers.WhitespaceTokenizer()):
 		Parser.__init__(self, t)
 		self.map = m
@@ -46,14 +46,12 @@ class MapParser(Parser):
 		"""
 		commands = []
 		expected_args = 0
-		name = tokens[0]
-		for token in tokens[1:]:
-
+		for token in tokens:
 			# We're expecting a command signal
 			if expected_args == 0:
 				try:
 					command = self.map[token]
-					commands.append((command, [name]))
+					commands.append((command, []))
 					expected_args += self.argc[token]
 				except KeyError:
 					# In the event of a self.map KeyError, we're simply ignoring an
@@ -65,7 +63,17 @@ class MapParser(Parser):
 			else:
 				commands[-1][1].append(token)
 				expected_args -= 1
+		if expected_args > 0:
+			print 'ERROR: not enough args passed to last command'
+			print 'Removing command from command list'
+			commands.pop(len(commands)-1)
 		return commands
 
 	def translate(self, message):
-		return self._makecommandlist(self._gettokens(message))
+		cmdlist = self._makecommandlist(self._gettokens(message))
+		responses = []
+		for cmd in cmdlist:
+			cmd_result = cmd[0](*(cmd[1]))
+			if cmd_result != None and cmd_result != "":
+				responses.append(cmd_result)
+		return responses
