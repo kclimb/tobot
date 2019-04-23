@@ -17,18 +17,13 @@ class Parser:
 		"""
 		return None
 
-# A default map of supported commands, and the corresponding number of arguments for
-# each command.
-DEFAULT_COMMANDS = {'!hi': commands.sayhi, '!hello': commands.sayhello, 'gl': commands.saythanks}
-DEFAULT_ARGC = {'!hi': 0, '!hello': 1, 'gl': 0}
-
 class MapParser(Parser):
 	"""
 	An implementing class of parser that uses a map to translate token keys to
 	behavioral (function object) values
 	"""
 
-	def __init__(self, m = DEFAULT_COMMANDS, a = DEFAULT_ARGC, t = tokenizers.WhitespaceTokenizer()):
+	def __init__(self, m = commands.DEFAULT_COMMANDS, a = commands.DEFAULT_ARGC, t = tokenizers.WhitespaceTokenizer()):
 		Parser.__init__(self, t)
 		self.map = m
 		self.argc = a
