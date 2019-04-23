@@ -24,11 +24,21 @@ def nop():
 def dr():
 	return random.choice(DANGAN) + ' ' + random.choice(RONPA)
 
+def wr():
+	return "it doesn't matter :)"
+
+def list_commands():
+	retstring = ''
+	for guy in DEFAULT_COMMANDS.keys():
+		if guy.startswith('!'):
+			retstring = retstring + guy + '\r'
+	return retstring
+
 
 # A default map of supported commands, and the corresponding number of arguments for
 # each command.
-DEFAULT_COMMANDS = {'!dr':dr,'!hi':sayhi,'!hello':sayhello,'gl':saythanks}
-DEFAULT_ARGC = {'!dr':0,'!hi': 0,'!hello':1,'gl':0}
+DEFAULT_COMMANDS = {'!commands':list_commands,'!dr':dr,'!hi':sayhi,'!hello':sayhello,'!wr':wr,'gl':saythanks}
+DEFAULT_ARGC = {'!commands':0,'!dr':0,'!hi': 0,'!hello':1,'!wr':0,'gl':0}
 
 # Other handy data things
 DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce']

@@ -45,9 +45,9 @@ class MapParser(Parser):
 			# We're expecting a command signal
 			if expected_args == 0:
 				try:
-					command = self.map[token]
+					command = self.map[token.lower()]
 					commands.append((command, []))
-					expected_args += self.argc[token]
+					expected_args += self.argc[token.lower()]
 				except KeyError:
 					# In the event of a self.map KeyError, we're simply ignoring an
 					# unknown token. For a self.argc KeyError, a command with no
