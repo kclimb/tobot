@@ -65,10 +65,4 @@ class MapParser(Parser):
 		return commands
 
 	def translate(self, message):
-		cmdlist = self._makecommandlist(self._gettokens(message))
-		responses = []
-		for cmd in cmdlist:
-			cmd_result = cmd[0](*(cmd[1]))
-			if cmd_result != None and cmd_result != "":
-				responses.append(cmd_result)
-		return responses
+		return self._makecommandlist(self._gettokens(message))

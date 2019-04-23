@@ -138,6 +138,14 @@ class Handler:
 		# print 'unknown command'
 		return {'type': 'UNKNOWN'}
 
+	def _do_commands(self, command_list):
+		responses = []
+		for cmd in command_list:
+			cmd_result = cmd[0](*(cmd[1]))
+			if cmd_result != None and cmd_result != "":
+				responses.append(cmd_result)
+		return responses
+
 	def _generate_responses(self, data):
 		"""
 		Returns a 2-tuple:
@@ -153,7 +161,9 @@ class Handler:
 		if msgtype == 'PING':
 			return (['PONG :tmi.twitch.tv\n'.encode('utf-8')], False)
 		elif msgtype == 'PRIVMSG':
-			return (self.parser.translate(data['message']),True)
+			command_list = self.parser.translate(data['message'])
+
+			return (self._do_commands(command_list),True)
 		return ([],True)
 
 	def eval(self, cmd, args):

@@ -5,6 +5,7 @@ All return values must be strings which the bot replies to the IRC server with. 
 the bot to not reply at all
 """
 import random
+#import requests
 
 def sayhi():
 	return 'hi :)'
@@ -16,6 +17,17 @@ def saythanks():
 	return 'thanks'
 
 def settitle(title):
+	f = open('mydata.txt')
+	headers = {
+		'Client-ID': '***REAL CLIENT ID HERE',
+		'Accept': 'PRETTY SURE V5 IS DEPRECATED SO CHANGE ME',
+		'Authorization': 'OAuth ' + f.read()
+	}
+
+	data = {
+		'channel[status]': title
+	}
+	#response = requests.put('https://api.twitch.tv/kraken/channels/***CHANGE ME TO THE REAL CHANNEL ID***', headers=headers, data=data)
 	return 'Title is set to ' + title
 
 def nop():
