@@ -36,7 +36,8 @@ class Robo:
 	def recv(self):
 		if self.running:
 			data = self.client.recv()
-			if data.endswith('ctrlc\r\n') and 'badges=broadcaster' in data[:data.index(' ')]:
+			print 'Literal socket data:\n', repr(data), '\n'
+			if 'ctrlc' in data and 'badges=broadcaster' in data[:data.index(' ')]:
 				return -1
 			self.handler.update_msg_queue(data)
 		else:
@@ -44,11 +45,13 @@ class Robo:
 		return ""
 
 	def process(self):
+		# print 'robo processing'
 		responses,isprivmsg = self.handler.process_msg()
 		sendcount = 0
 		for resp in responses:
 			self.send(resp, isprivmsg)
 			sendcount += 1
+		# print 'sendcount', sendcount
 		return sendcount
 
 	def isrunning(self):

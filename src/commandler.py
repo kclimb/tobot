@@ -63,6 +63,7 @@ class Handler:
 		"""
 		Handles the separation of PRIVMSG messages (aka "chat" messages)
 		"""
+		# print 'separating privmsg...'
 		firstspace = msg.index(' ')
 		headers = msg[:firstspace]
 		rest = msg[firstspace+1:]
@@ -73,6 +74,7 @@ class Handler:
 		rest3 = rest2[thirdspace+1:]
 		fourthspace = rest3.index(' ')
 		payload = rest3[fourthspace+2:].rstrip('\r\n')
+		# print 'separated privmsg'
 		return {'from': sender, 'headers': self._parse_headers(headers), 'message': payload, 'type': 'PRIVMSG'}
 
 	def _separate_roomstate(self, msg):
@@ -102,11 +104,21 @@ class Handler:
 		Examines the input message to determine what type the message is, then
 		delegates to the appropriate separation routine.
 		"""
+		# print 'parsing raw message\n',inputmsg
 		if inputmsg.startswith('PING :tmi.twitch.tv'):
 			# PING
 			return self._separate_pong()
-		elif inputmsg.startswith('@badge-info='):
-			return self._separate_privmsg(inputmsg)
+		elif inputmsg.startswith('@badge-info=') or inputmsg.startswith('@badges='):
+			firstspace = inputmsg.index(" ")
+			headers = inputmsg[:firstspace]
+			rest = inputmsg[firstspace + 1:]
+			secspace = rest.index(" ")
+			rest2 = rest[secspace + 1:]
+			if rest2.startswith("PRIVMSG #"):
+				# print 'parse raw reached privmsg'
+				return self._separate_privmsg(inputmsg)
+			elif rest2.startswith("USERSTATE #"):
+				return self._separate_userstate(inputmsg)
 		elif inputmsg.startswith(':jtv MODE'):
 			# MODE
 			return self._separate_mode(inputmsg)
@@ -122,19 +134,8 @@ class Handler:
 			return self._separate_clear_user_chat(inputmsg)
 		elif inputmsg.startswith("@room-id="):
 			return self._separate_clearchat(inputmsg)
-		else:
-			firstspace = inputmsg.index(" ")
-			headers = inputmsg[:firstspace]
-			rest = inputmsg[firstspace + 1:]
-			secspace = rest.index(" ")
-			rest2 = rest[secspace + 1:]
-			thirdspace = rest2.index(" ")
-			if inputmsg.startswith('@badges='):
-				if rest2.startswith("PRIVMSG #") in inputmsg:
-					return self._separate_privmsg(inputmsg)
-				elif rest2.startswith("USERSTATE #") in inputmsg:
-					return self._separate_userstate(inputmsg)
 		#return headers, cmd, rest[secspace + 1:]
+		# print 'unknown command'
 		return {'type': 'UNKNOWN'}
 
 	def _generate_responses(self, data):
@@ -162,7 +163,9 @@ class Handler:
 		"""
 		Removes next message from message queue and processes it.
 		"""
+		# print 'handler processing'
 		if len(self.msg_q) > 1:
+			# print 'queue nonempty'
 			raw_msg = self.msg_q.pop(0)
 			data = self._parse_raw_msg(raw_msg)
 			return self._generate_responses(data)

@@ -123,10 +123,10 @@ class InsecureMyRCClient(IRCClient):
 					self.socket.sendall('PRIVMSG #' + chan + ' :' + message + '\n')
 				else:
 					self.socket.sendall(message)
-				m = self.socket.recv(self.read_size).decode()
+				#m = self.socket.recv(self.read_size).decode()
 				if self.verbose:
 					print 'Successfully sent message ' + message
-					print 'Received response ' + m
+					#print 'Received response ' + m
 				self.numwrites += 1
 				return True
 			elif self.verbose:
