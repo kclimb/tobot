@@ -138,16 +138,22 @@ class Handler:
 		return {'type': 'UNKNOWN'}
 
 	def _generate_responses(self, data):
+		"""
+		Returns a 2-tuple:
+			Item 1) a list of responses to send
+			Item 2) True if responses are chat messages,
+					False otherwise (aka pongs)
+		"""
 		if 'type' not in data:
 			return []
 		else:
 			msgtype = data['type']
 
 		if msgtype == 'PING':
-			return ['PONG :tmi.twitch.tv\n'.encode('utf-8')]
+			return (['PONG :tmi.twitch.tv\n'.encode('utf-8')], False)
 		elif msgtype == 'PRIVMSG':
-			return self.parser.translate(data['message'])
-		return []
+			return (self.parser.translate(data['message']),True)
+		return ([],True)
 
 	def eval(self, cmd, args):
 		return cmd(*args)
@@ -163,7 +169,7 @@ class Handler:
 		else:
 			if self.verbose:
 				print 'Nothing currently in message queue'
-			return []
+			return ([],True)
 
 	def update_msg_queue(self, sockstream):
 		"""

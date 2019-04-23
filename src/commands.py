@@ -11,5 +11,11 @@ def sayhi():
 def sayhello(name):
 	return 'hello '+name+'!'
 
+def saythanks():
+	return 'thanks'
+
+def settitle(title):
+	return 'Title is set to ' + title
+
 def nop():
 	return None

@@ -27,9 +27,9 @@ class Robo:
 	def stop(self):
 		self.running = False
 
-	def send(self, message):
+	def send(self, message, isprivmsg=True):
 		if self.running:
-			self.client.send_message(message)
+			self.client.send_message(message, isprivmsg)
 		else:
 			print "Robo not running. Can't send message."
 
@@ -44,10 +44,10 @@ class Robo:
 		return ""
 
 	def process(self):
-		responses = self.handler.process_msg()
+		responses,isprivmsg = self.handler.process_msg()
 		sendcount = 0
 		for resp in responses:
-			self.send(resp)
+			self.send(resp, isprivmsg)
 			sendcount += 1
 		return sendcount
 

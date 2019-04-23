@@ -19,8 +19,8 @@ class Parser:
 
 # A default map of supported commands, and the corresponding number of arguments for
 # each command.
-DEFAULT_COMMANDS = {'!hi': commands.sayhi, '!hello': commands.sayhello}
-DEFAULT_ARGC = {'!hi': 0, '!hello': 1}
+DEFAULT_COMMANDS = {'!hi': commands.sayhi, '!hello': commands.sayhello, 'gl': commands.saythanks}
+DEFAULT_ARGC = {'!hi': 0, '!hello': 1, 'gl': 0}
 
 class MapParser(Parser):
 	"""

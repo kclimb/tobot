@@ -114,12 +114,15 @@ class InsecureMyRCClient(IRCClient):
 			self._part_channel(self.socket, chan)
 		self._join_channel(self.socket, chan)
 
-	def send_message(self, message, chan=DEFAULT_CHANNEL):
+	def send_message(self, message, isprivmsg=True, chan=DEFAULT_CHANNEL):
 		if self.is_connected:
 			if self.verbose:
 				print 'Sending message...'
 			if chan in self.channels:
-				self.socket.sendall('PRIVMSG #' + chan + ' :' + message + '\n')
+				if isprivmsg:
+					self.socket.sendall('PRIVMSG #' + chan + ' :' + message + '\n')
+				else:
+					self.socket.sendall(message)
 				m = self.socket.recv(self.read_size).decode()
 				if self.verbose:
 					print 'Successfully sent message ' + message
