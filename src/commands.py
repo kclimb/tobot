@@ -16,7 +16,7 @@ def sayhello(name):
 def saythanks():
 	return 'thanks'
 
-def settitle(title):
+def title(title, user_type):
 	f = open('mydata.txt')
 	headers = {
 		'Client-ID': '***REAL CLIENT ID HERE',
@@ -47,10 +47,11 @@ def list_commands():
 	return retstring
 
 
-# A default map of supported commands, and the corresponding number of arguments for
-# each command.
-DEFAULT_COMMANDS = {'!commands':list_commands,'!dr':dr,'!hi':sayhi,'!hello':sayhello,'!wr':wr,'gl':saythanks}
-DEFAULT_ARGC = {'!commands':0,'!dr':0,'!hi': 0,'!hello':1,'!wr':0,'gl':0}
+# A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
+# Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
+DEFAULT_COMMANDS = {'!commands':list_commands,'!dr':dr,'!hi':sayhi,'!hello':sayhello,'!title':title,'!wr':wr,'gl':saythanks}
+DEFAULT_ARGC = {'!commands':0,'!dr':0,'!hi': 0,'!hello':1,'!title':1,'!wr':0,'gl':0}
+MIN_ARGC = {} #{'!title':0}
 
 # Other handy data things
 DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce']

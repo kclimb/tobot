@@ -18,7 +18,12 @@ class Handler:
 		headers.
 		"""
 		hdrs = headers[1:]
-		return hdrs.split(';')
+		keyval = hdrs.split(';')
+		hdr_dict = {}
+		for pair in keyval:
+			key,_,val = pair.partition('=')
+			hdr_dict[key] = val
+		return hdr_dict
 
 	def _separate_clear_user_chat(self, msg):
 		return {'type': 'CLEARUSERCHAT'}
@@ -139,6 +144,10 @@ class Handler:
 		return {'type': 'UNKNOWN'}
 
 	def _get_extra_params(self, cmd, data):
+		cmd_func = cmd[0]
+		headers = data['headers']
+		if cmd_func == commands.settitle:
+			pass
 		return []
 
 	def _do_commands(self, command_list, data):
@@ -224,3 +233,5 @@ ping_ex = "PING :tmi.twitch.tv\r\n"
 privmsg_ex = "@badges=broadcaster/1,premium/1;color=#106F73;display-name=Toburr;emotes=;id=c17fbc52-e48c-4f6f-9e5d-be7ed47d7404;mod=0;room-id=77780959;subscriber=0;tmi-sent-ts=1534012954836;turbo=0;user-id=77780959;user-type= :toburr!toburr@toburr.tmi.twitch.tv PRIVMSG #toburr :5\r\n"
 roomstate_ex = "@broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;rituals=0;room-id=77780959;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #toburr\r\n"
 userstate_ex = "@badges=moderator/1;color=;display-name=toburobo;emote-sets=0;mod=1;subscriber=0;user-type=mod :tmi.twitch.tv USERSTATE #toburr\r\n"
+
+#test = "@badge-info=;badges=moderator/1,premium/1;color=;display-name=toburobo;emotes=;flags=;id=de613730-b8b2-4048-b701-0fc4c3659b91;mod=1;room-id=77780959;subscriber=0;tmi-sent-ts=1556060247754;turbo=0;user-id=185295401;user-type=mod :toburobo!toburobo@toburobo.tmi.twitch.tv PRIVMSG #toburr :!dr\r\n"

@@ -23,10 +23,11 @@ class MapParser(Parser):
 	behavioral (function object) values
 	"""
 
-	def __init__(self, m = commands.DEFAULT_COMMANDS, a = commands.DEFAULT_ARGC, t = tokenizers.WhitespaceTokenizer()):
+	def __init__(self, m = commands.DEFAULT_COMMANDS, a = commands.DEFAULT_ARGC, ma = commands.MIN_ARGC, t = tokenizers.WhitespaceTokenizer()):
 		Parser.__init__(self, t)
 		self.map = m
 		self.argc = a
+		self.min_argc = ma
 
 	def _gettokens(self, message):
 		"""
@@ -59,9 +60,13 @@ class MapParser(Parser):
 				commands[-1][1].append(token)
 				expected_args -= 1
 		if expected_args > 0:
-			print 'ERROR: not enough args passed to last command'
-			print 'Removing command from command list'
-			commands.pop(len(commands)-1)
+			cur_cmd = commands[-1][0]
+			if cur_cmd in self.min_argc and self.min_argc[cur_cmd] + expected_args >= self.argc[cur_cmd]:
+				pass
+			else:
+				print 'ERROR: not enough args passed to last command'
+				print 'Removing command from command list'
+				commands.pop(len(commands)-1)
 		return commands
 
 	def translate(self, message):
