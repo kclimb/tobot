@@ -2,6 +2,8 @@
 import parsers as parsers
 import re
 
+commands = parsers.commands
+
 class Handler:
 	"""
 	A handler that takes raw Twitch IRC input and does format-specific
@@ -146,7 +148,7 @@ class Handler:
 	def _get_extra_params(self, cmd, data):
 		cmd_func = cmd[0]
 		headers = data['headers']
-		if cmd_func == commands.settitle:
+		if cmd_func == commands.title:
 			pass
 		return []
 
