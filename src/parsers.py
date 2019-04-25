@@ -41,14 +41,18 @@ class MapParser(Parser):
 		behaviors with respect to the token sequence
 		"""
 		commands = []
+		commandset = set([])
 		expected_args = 0
 		for token in tokens:
 			# We're expecting a command signal
 			if expected_args == 0:
 				try:
-					command = self.map[token.lower()]
-					commands.append((command, []))
-					expected_args += self.argc[token.lower()]
+					lowertoken = token.lower()
+					command = self.map[lowertoken]
+					if lowertoken not in commandset:	# Don't allow users to spam the same command
+						commands.append((command, []))
+						commandset.add(lowertoken)
+						expected_args += self.argc[lowertoken]
 				except KeyError:
 					# In the event of a self.map KeyError, we're simply ignoring an
 					# unknown token. For a self.argc KeyError, a command with no
