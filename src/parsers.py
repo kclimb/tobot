@@ -1,6 +1,9 @@
 import commands as commands
 import tokenizers as tokenizers
 
+MAX_COMMANDS_PER_MESSAGE = 5
+USE_COMMAND_HARDCAP = True
+
 class Parser:
 
 	def __init__(self, t = tokenizers.WhitespaceTokenizer()):
@@ -46,6 +49,9 @@ class MapParser(Parser):
 		for token in tokens:
 			# We're expecting a command signal
 			if expected_args == 0:
+				# Stop if the message is trying to send too many commands (spam prevention)
+				if USE_COMMAND_HARDCAP and len(commands) >= MAX_COMMANDS_PER_MESSAGE:
+					return commands
 				try:
 					lowertoken = token.lower()
 					command = self.map[lowertoken]
