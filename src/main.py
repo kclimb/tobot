@@ -16,8 +16,7 @@ def main():
 	r = robo.Robo(opass)
 	r.start()
 	r.send('hi :)')
-	handle_result = ""
-	while handle_result != "STOP":
+	while True:
 		if r.recv() == -1:      # Wait for incoming data
 			break
 		while r.process() > 0:  # Process messages til none are left
