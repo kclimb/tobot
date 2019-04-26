@@ -75,14 +75,15 @@ class Handler:
 		headers = msg[:firstspace]
 		rest = msg[firstspace+1:]
 		secondspace = rest.index(' ')
-		sender = rest[1:rest.index('!')]
+		#sender = rest[1:rest.index('!')] Unused since we can get this from headers
 		rest2 = rest[secondspace+1:]
 		thirdspace = rest2.index(' ')
 		rest3 = rest2[thirdspace+1:]
 		fourthspace = rest3.index(' ')
+		channel = rest3[1:fourthspace]
 		payload = rest3[fourthspace+2:].rstrip('\r\n')
 		# print 'separated privmsg'
-		return {'from': sender, 'headers': self._parse_headers(headers), 'message': payload, 'type': 'PRIVMSG'}
+		return {'channel': channel, 'headers': self._parse_headers(headers), 'message': payload, 'type': 'PRIVMSG'}
 
 	def _separate_roomstate(self, msg):
 		return {'type': 'ROOMSTATE'}
@@ -146,30 +147,48 @@ class Handler:
 		return {'type': 'UNKNOWN'}
 
 	def _get_extra_params(self, cmd, data):
+		"""
+		Given an expected command and metadata from the message issuing the
+		command, return any expected arguments that don't originate from
+		the message body itself.
+		"""
+		params = []
 		cmd_func = cmd[0]
-		headers = data['headers']
-		if cmd_func == commands.title:
-			pass
-		return []
+		if cmd_func == commands.settitle:
+			params.append(data)
+		return params
 
 	def _do_commands(self, command_list, data):
+		"""
+		Actually run the commands parsed from the message.
+		Returns any responses this bot needs to send to chat.
+		"""
 		responses = []
 		for cmd in command_list:
+			# Get any params we need from message metadata or internal state
 			try:
 				extra_params = self._get_extra_params(cmd, data)
+				print 'extra_params are', extra_params
 			except KeyError:
 				extra_params = []
-			cmd_result = cmd[0](*(cmd[1]))
+			cmd[1].extend(extra_params)
+			cmd_result = self.eval(cmd[0],cmd[1])
 			if cmd_result != None and cmd_result != "":
 				responses.append(cmd_result)
 		return responses
 
 	def _generate_responses(self, data):
 		"""
+		Parses incoming messages, returns any responses bot needs to send.
+
 		Returns a 2-tuple:
 			Item 1) a list of responses to send
 			Item 2) True if responses are chat messages,
 					False otherwise (aka pongs)
+			We use item 2 to sandbox chatter-sent messages to make sure
+			they are never interpreted as anything other than private messages
+			(i.e. don't allow any type of IRC injection but idk why someone
+			would try that.)
 		"""
 		if 'type' not in data:
 			return []
@@ -185,6 +204,9 @@ class Handler:
 		return ([],True)
 
 	def eval(self, cmd, args):
+		"""
+		Run a single command.
+		"""
 		return cmd(*args)
 
 	def process_msg(self):
@@ -236,4 +258,9 @@ privmsg_ex = "@badges=broadcaster/1,premium/1;color=#106F73;display-name=Toburr;
 roomstate_ex = "@broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;rituals=0;room-id=77780959;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #toburr\r\n"
 userstate_ex = "@badges=moderator/1;color=;display-name=toburobo;emote-sets=0;mod=1;subscriber=0;user-type=mod :tmi.twitch.tv USERSTATE #toburr\r\n"
 
-#test = "@badge-info=;badges=moderator/1,premium/1;color=;display-name=toburobo;emotes=;flags=;id=de613730-b8b2-4048-b701-0fc4c3659b91;mod=1;room-id=77780959;subscriber=0;tmi-sent-ts=1556060247754;turbo=0;user-id=185295401;user-type=mod :toburobo!toburobo@toburobo.tmi.twitch.tv PRIVMSG #toburr :!dr\r\n"
+#test = "@badge-info=;badges=moderator/1,premium/1;color=;display-name=toburobo;emotes=;flags=;id=de613730-b8b2-4048-b701-0fc4c3659b91;mod=1;room-id=77780959;subscriber=0;tmi-sent-ts=1556060247754;turbo=0;user-id=185295401;user-type=mod :toburobo!toburobo@toburobo.tmi.twitch.tv PRIVMSG #toburr :!settitle a b c d test\r\n"
+#h = Handler()
+#h.update_msg_queue(test)
+#r = h.process_msg()
+#for guy in r:
+#	print guy

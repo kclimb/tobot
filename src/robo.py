@@ -51,7 +51,8 @@ class Robo:
 		for resp in responses:
 			self.send(resp, isprivmsg)
 			sendcount += 1
-		# print 'sendcount', sendcount
+		if sendcount == 0:
+			print 'No more messages to process'
 		return sendcount
 
 	def isrunning(self):
