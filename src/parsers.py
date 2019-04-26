@@ -3,6 +3,7 @@ import tokenizers as tokenizers
 
 MAX_COMMANDS_PER_MESSAGE = 5
 USE_COMMAND_HARDCAP = True
+ALLOW_DUPLICATE_COMMANDS = True
 
 class Parser:
 
@@ -38,6 +39,12 @@ class MapParser(Parser):
 		"""
 		return self.tokenizer.tokenize(message)
 
+	def _tokens_still_expected_error(commands):
+		print 'ERROR: not enough args passed to last command'
+		print 'Removing command from command list'
+		commands.pop(len(commands)-1)
+		return commands
+
 	def _makecommandlist(self, tokens):
 		"""
 		Given a nonempty sequence of tokens, constructs an appropriate sequence of
@@ -45,30 +52,48 @@ class MapParser(Parser):
 		"""
 		commands = []
 		commandset = set([])
-		expected_args = 0
-		for token in tokens:
-			# We're expecting a command signal
-			if expected_args == 0:
-				# Stop if the message is trying to send too many commands (spam prevention)
-				if USE_COMMAND_HARDCAP and len(commands) >= MAX_COMMANDS_PER_MESSAGE:
-					return commands
-				try:
-					lowertoken = token.lower()
-					command = self.map[lowertoken]
-					if lowertoken not in commandset:	# Don't allow users to spam the same command
-						commands.append((command, []))
-						commandset.add(lowertoken)
-						expected_args += self.argc[lowertoken]
-				except KeyError:
-					# In the event of a self.map KeyError, we're simply ignoring an
-					# unknown token. For a self.argc KeyError, a command with no
-					# specified argc is assumed to have 0 paramters.
-					pass
+		token_num = 0
+		while token_num < len(tokens):
+			# Stop if the message is trying to send too many commands (spam prevention)
+			if USE_COMMAND_HARDCAP and len(commands) >= MAX_COMMANDS_PER_MESSAGE:
+				return commands
+			try:
+				lowertoken = tokens[token_num].lower()
+				command = self.map[lowertoken]
+				if ALLOW_DUPLICATE_COMMANDS or lowertoken not in commandset:	# Don't allow users to spam the same command
+					commands.append((command, []))
+					commandset.add(lowertoken)
+					expected_args = self.argc[lowertoken]
+					# If a command is set to "infinity" expected args, that just
+					# means the rest of the tokens are one big argument
+					if expected_args == float('inf'):
+						token_num += 1
+						if len(tokens) - token_num > 0:
+							commands[-1][1].append(tokens[token_num+1:]) # Note this is adding a single argument which is the remaining token list
+							token_num = len(tokens) # Make sure we end the function after this
+						else:
+							return self._tokens_still_expected_error(commands)
+					else: # Finite number of tokens expected
+						while token_num < token_num + expected_args:
+							token_num += 1
+							if token_num >= len(tokens):
+								return self._tokens_still_expected_error(commands)
 
+							cur_token = tokens[token_num]
+							append_arg = cur_token
+							# Treat a sequence of tokens where the first starts with a " and the last ends with a " as a single token
+							if append_arg.startswith('"'):
+								while not append_arg.endswith('"'):
+									append_arg = append_arg + " "
+							commands[-1][1].append(append_arg)
+			except KeyError:
+				# In the event of a self.map KeyError, we're simply ignoring an
+				# unknown token. For a self.argc KeyError, a command with no
+				# specified argc is assumed to have 0 paramters.
+					pass
+			token_num += 1
 			# We're expecting a parameter to the currently parsed command
-			else:
-				commands[-1][1].append(token)
-				expected_args -= 1
+
 		if expected_args > 0:
 			cur_cmd = commands[-1][0]
 			if cur_cmd in self.min_argc and self.min_argc[cur_cmd] + expected_args >= self.argc[cur_cmd]:
