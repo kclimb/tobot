@@ -97,7 +97,7 @@ class InsecureMyRCClient(IRCClient):
 				# TODO: properly handle the disconnection
 			elif self.verbose:
 				print 'Message received:'
-				print m
+				print repr(m), '\n'
 			return m
 		elif self.verbose:
 			print "Error: client currently not connected to channel. Can't receive messages"

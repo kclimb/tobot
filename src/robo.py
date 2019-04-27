@@ -8,10 +8,11 @@ class Robo:
 	"""
 	Manages all the business of the process (in contrast to any front-facing UI (for which currently there are no plans (but you never know, y'know?)))
 	"""
-	def __init__(self, netpass, ):
+	def __init__(self, netpass, v=True):
 		self.running = False
 		self.client = client.InsecureMyRCClient(netpass)
 		self.handler = handler.Handler()
+		self.verbose = True
 
 	def start(self):
 		if not self.running:
@@ -21,7 +22,7 @@ class Robo:
 			else:
 				print 'ERROR when starting robo :('
 				self.running = False
-		else:
+		elif self.verbose:
 			print "already running, can't start"
 
 	def stop(self):
@@ -30,17 +31,18 @@ class Robo:
 	def send(self, message, isprivmsg=True):
 		if self.running:
 			self.client.send_message(message, isprivmsg)
-		else:
+		elif self.verbose:
 			print "Robo not running. Can't send message."
 
 	def recv(self):
 		if self.running:
 			data = self.client.recv()
-			print 'Literal socket data:\n', repr(data), '\n'
+			if self.verbose:
+				print 'data passed back from client'
 			if 'ctrlc' in data and 'badges=broadcaster' in data[:data.index(' ')]:
 				return -1
 			self.handler.update_msg_queue(data)
-		else:
+		elif self.verbose:
 			print "Robo not running. Can't receive message."
 		return ""
 
@@ -51,7 +53,7 @@ class Robo:
 		for resp in responses:
 			self.send(resp, isprivmsg)
 			sendcount += 1
-		if sendcount == 0:
+		if sendcount == 0 and self.verbose:
 			print 'No more messages to process'
 		return sendcount
 
