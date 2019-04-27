@@ -16,3 +16,4 @@ src/mydata.txt
 *.pyc
 src/tokenauth.txt
 src/scratchpad.py
+src/apiauth.txt

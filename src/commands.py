@@ -105,5 +105,5 @@ DEFAULT_ARGC = {'!commands':0,'!dr':0,'!hi': 0,'!hello':1,'!settitle':1,'!title'
 MIN_ARGC = {} #{'!title':0} This was a terrible idea should probably delete this but you never know, huh
 
 # Other handy data things
-DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce', 'diego']
-RONPA = ['ron paul', 'romper', 'rumbo', 'rumble', 'rumpus', 'rambo', 'renpy', 'rumba', 'ringo', 'rondo']
+DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce', 'diego', 'dang']
+RONPA = ['ron paul', 'romper', 'rumbo', 'rumble', 'rumpus', 'rambo', 'renpy', 'rumba', 'ringo', 'rondo', 'papa']
