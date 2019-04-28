@@ -1,4 +1,5 @@
 #import commands as commands
+import api_managers as api
 import parsers as parsers
 import re
 
@@ -106,6 +107,7 @@ class Handler:
 		# Primed with an empty string because queue should never be empty.
 		# See parse_socket_data for details.
 		self.msg_q = ['']
+		self.api_mgr = api.TwitchAPIManager()
 
 	def _parse_raw_msg(self, inputmsg):
 		"""
@@ -156,6 +158,7 @@ class Handler:
 		cmd_func = cmd[0]
 		if cmd_func == commands.settitle:
 			params.append(data)
+			params.append(self.api_mgr)
 		return params
 
 	def _do_commands(self, command_list, data):
@@ -175,6 +178,7 @@ class Handler:
 			cmd_result = self.eval(cmd[0],cmd[1])
 			if cmd_result != None and cmd_result != "":
 				responses.append(cmd_result)
+		print 'responses:', responses
 		return responses
 
 	def _generate_responses(self, data):

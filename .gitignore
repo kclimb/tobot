@@ -17,3 +17,5 @@ src/mydata.txt
 src/tokenauth.txt
 src/scratchpad.py
 src/apiauth.txt
+src/user_refresh.txt
+src/user_access.txt

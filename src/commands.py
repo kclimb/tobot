@@ -5,7 +5,6 @@ All return values must be strings which the bot replies to the IRC server with. 
 the bot to not reply at all
 """
 import random
-#import requests
 
 def sayhi():
 	"""
@@ -31,13 +30,14 @@ def saytitle():
 	"""
 	return "!title not implemented yet :("
 
-LOL = 1 # Set me to 0 once API stuff is set up.
-def settitle(title, metadata):
+LOL = 0 # Set me to 0 once API stuff is set up.
+def settitle(title, metadata, api_mgr):
 	"""
 	Allows mods and broadcasters to set the title of the stream game.
 	Note that the 'title' parameter is specified by the chat message, but
 	user_type is supplied by this bot from parsing the chat message's metadata.
 	"""
+	print 'in settitle:', title
 	hdrs = metadata['headers']
 	channel = metadata['channel']
 	# If this person isn't a mod or the broadcaster, do a !title instead
@@ -45,18 +45,11 @@ def settitle(title, metadata):
 		return saytitle()
 	elif LOL:
 		return '!settitle not implemented yet :('
-	f = open('mydata.txt')
-	headers = {
-		'Client-ID': '***REAL CLIENT ID HERE',
-		'Accept': 'PRETTY SURE V5 IS DEPRECATED SO CHANGE ME',
-		'Authorization': 'OAuth ' + f.read()
-	}
-
-	data = {
-		'channel[status]': title
-	}
+	success = api_mgr.set_stream_title(title)
 	#response = requests.put('https://api.twitch.tv/kraken/channels/***CHANGE ME TO THE REAL CHANNEL ID***', headers=headers, data=data)
-	return 'Title is set to ' + title
+	if success:
+		return 'Title is set to ' + title
+	return 'Failed to set title'
 
 def nop():
 	"""
