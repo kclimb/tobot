@@ -119,9 +119,18 @@ class TwitchAPIManager:
         return success
 
     def _update_channel_request(self, channelid, headers, data):
-        return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
+        return requests.put('https://api.twitch.tv/kraken/channels/'+channelid, headers=headers, data=data)
 
-    def do_set_stream_title_request(self, title):
+    def _get_channel_request(self):
+        headers = {
+            'Client-ID': self.clientid,
+            'Accept': 'application/vnd.twitchtv.v5+json',
+        }
+        return requests.get('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers)
+
+############################ COMMAND LOGIC #####################################
+
+    def _do_set_stream_title_request(self, title):
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
@@ -130,12 +139,12 @@ class TwitchAPIManager:
         }
 
         data = '{"channel": {"status": "'+title+'"}}'
-        return self
+        return self._update_channel_request(TOBURR_USER_ID, headers, data)
 
     def set_stream_title(self, title):
-        return self.request_send_loop(self.do_set_stream_title_request, [title])
+        return self._request_send_loop(self._do_set_stream_title_request, [title])
 
-    def do_set_stream_game_request(self, game):
+    def _do_set_stream_game_request(self, game):
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
@@ -146,7 +155,15 @@ class TwitchAPIManager:
         return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
 
     def set_stream_game(self, game):
-        return self.request_send_loop(self.do_set_stream_game_request, [game])
+        return self._request_send_loop(self._do_set_stream_game_request, [game])
+
+    def get_stream_title(self):
+        return self._get_channel_request()['status']
+
+    def get_stream_game(self):
+        return self._get_channel_request()['game']
+
+#################################### MISC ######################################
 
     def set_clientid(self, newid):
         """
