@@ -28,7 +28,7 @@ def saytitle(api_mgr):
 	"""
 	Returns the title of the stream. Needs Twitch API access.
 	"""
-	return "!title not implemented yet :("
+	return 'Stream title is: '+api_mgr.get_stream_title()
 
 def settitle(title, metadata, api_mgr):
 	"""
@@ -38,9 +38,12 @@ def settitle(title, metadata, api_mgr):
 	"""
 	hdrs = metadata['headers']
 	channel = metadata['channel']
+	print 'HDRS'
+	for guy in hdrs.items():
+		print guy
 	# If this person isn't a mod or the broadcaster, do a !title instead
-	if hdrs['mod'] == 0 and channel != hdrs['display-name'].lower():
-		return saytitle()
+	if hdrs['mod'] == '0' and channel != hdrs['display-name'].lower():
+		return saytitle(api_mgr)
 
 	success = api_mgr.set_stream_title(title)
 	if success:
@@ -51,13 +54,13 @@ def saygame(api_mgr):
 	"""
 	Returns the title of the current game. Needs Twitch API access.
 	"""
-	return '!game not implemented yet :('
+	return 'Game is: '+api_mgr.get_stream_game()
 
 def setgame(game, metadata, api_mgr):
 	hdrs = metadata['headers']
 	channel = metadata['channel']
 	# If this person isn't a mod or the broadcaster, do a !title instead
-	if hdrs['mod'] == 0 and channel != hdrs['display-name'].lower():
+	if hdrs['mod'] == '0' and channel != hdrs['display-name'].lower():
 		return saygame(api_mgr)
 
 	success = api_mgr.set_stream_game(game)

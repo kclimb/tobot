@@ -158,10 +158,10 @@ class TwitchAPIManager:
         return self._request_send_loop(self._do_set_stream_game_request, [game])
 
     def get_stream_title(self):
-        return self._get_channel_request()['status']
+        return self._get_channel_request().json()['status']
 
     def get_stream_game(self):
-        return self._get_channel_request()['game']
+        return self._get_channel_request().json()['game']
 
 #################################### MISC ######################################
 
