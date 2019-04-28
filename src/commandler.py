@@ -172,7 +172,6 @@ class Handler:
 			# Get any params we need from message metadata or internal state
 			try:
 				extra_params = self._get_extra_params(cmd, data)
-				print 'extra_params are', extra_params
 			except KeyError:
 				extra_params = []
 			cmd[1].extend(extra_params)

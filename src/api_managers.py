@@ -40,6 +40,8 @@ class TwitchAPIManager:
             print 'Text:',response.text
         print ''
 
+############################# ACCESS TOKEN THINGS #############################
+
     def _acquire_access_token(self, scope=''):
         """
         Fetches a new access token from the Twitch API.
@@ -89,7 +91,9 @@ class TwitchAPIManager:
             self._print_error_message(resp)
         return success
 
-    def request_send_loop(self, request_func, params):
+########################### HTTP REQUEST LOGIC ################################
+
+    def _request_send_loop(self, request_func, params):
         """
         Repeats a request until it definitively succeeds or fails
         """
@@ -104,6 +108,8 @@ class TwitchAPIManager:
                 for guy in resp.headers.items():
                     print guy
                 print ''
+                print resp.json()
+                print ''
                 if 'WWW-Authenticate' in resp.headers:
                     need_refresh = True
                     self._refresh_user_token()
@@ -111,6 +117,9 @@ class TwitchAPIManager:
                 print 'ERROR while setting stream title'
                 self._print_error_message(resp)
         return success
+
+    def _update_channel_request(self, channelid, headers, data):
+        return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
 
     def do_set_stream_title_request(self, title):
         headers = {
@@ -121,7 +130,7 @@ class TwitchAPIManager:
         }
 
         data = '{"channel": {"status": "'+title+'"}}'
-        return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
+        return self
 
     def set_stream_title(self, title):
         return self.request_send_loop(self.do_set_stream_title_request, [title])

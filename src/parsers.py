@@ -83,8 +83,16 @@ class MapParser(Parser):
 							append_arg = cur_token
 							# Treat a sequence of tokens where the first starts with a " and the last ends with a " as a single token
 							if append_arg.startswith('"'):
+								append_arg = append_arg[1:]
 								while not append_arg.endswith('"'):
-									append_arg = append_arg + " "
+									token_num += 1
+									stop_num += 1 # Since each of these tokens doesn't count against our total parameters,
+												  # we need to push back the stop num
+									if token_num >= len(tokens):
+										print 'No endquote token found'
+										return self._tokens_still_expected_error(commands)
+									append_arg = append_arg + " " + tokens[token_num]
+								append_arg = append_arg.rstrip('"')
 							commands[-1][1].append(append_arg)
 			except KeyError:
 				# In the event of a self.map KeyError, we're simply ignoring an
