@@ -27,11 +27,10 @@ class MapParser(Parser):
 	behavioral (function object) values
 	"""
 
-	def __init__(self, m = commands.DEFAULT_COMMANDS, a = commands.DEFAULT_ARGC, ma = commands.MIN_ARGC, t = tokenizers.WhitespaceTokenizer()):
+	def __init__(self, m = commands.DEFAULT_COMMANDS, a = commands.DEFAULT_ARGC, t = tokenizers.WhitespaceTokenizer()):
 		Parser.__init__(self, t)
 		self.map = m
 		self.argc = a
-		self.min_argc = ma
 
 	def _gettokens(self, message):
 		"""
@@ -39,7 +38,7 @@ class MapParser(Parser):
 		"""
 		return self.tokenizer.tokenize(message)
 
-	def _tokens_still_expected_error(commands):
+	def _tokens_still_expected_error(self, commands):
 		print 'ERROR: not enough args passed to last command'
 		print 'Removing command from command list'
 		commands.pop(len(commands)-1)
@@ -74,7 +73,8 @@ class MapParser(Parser):
 						else:
 							return self._tokens_still_expected_error(commands)
 					else: # Finite number of tokens expected
-						while token_num < token_num + expected_args:
+						stop_num = token_num + expected_args
+						while token_num < stop_num:
 							token_num += 1
 							if token_num >= len(tokens):
 								return self._tokens_still_expected_error(commands)
@@ -94,14 +94,6 @@ class MapParser(Parser):
 			token_num += 1
 			# We're expecting a parameter to the currently parsed command
 
-		if expected_args > 0:
-			cur_cmd = commands[-1][0]
-			if cur_cmd in self.min_argc and self.min_argc[cur_cmd] + expected_args >= self.argc[cur_cmd]:
-				pass
-			else:
-				print 'ERROR: not enough args passed to last command'
-				print 'Removing command from command list'
-				commands.pop(len(commands)-1)
 		return commands
 
 	def translate(self, message):

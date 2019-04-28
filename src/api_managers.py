@@ -16,7 +16,7 @@ class TwitchAPIManager:
         self.clientid = id
         if auth == None:
             try:
-                f.open(AUTH_PATH)
+                f = open(AUTH_PATH)
                 auth = f.read()
                 f.close()
             except:
@@ -31,7 +31,7 @@ class TwitchAPIManager:
         self.user_refresh_token = f.read()
         f.close()
 
-    def _print_error_message(response):
+    def _print_error_message(self, response):
         print 'Status:',response.status_code
         try:
             print response.json()
@@ -40,7 +40,7 @@ class TwitchAPIManager:
             print 'Text:',response.text
         print ''
 
-    def _acquire_access_token(scope=''):
+    def _acquire_access_token(self, scope=''):
         """
         Fetches a new access token from the Twitch API.
         If request is successful, sets Manager token to new token.
@@ -56,7 +56,7 @@ class TwitchAPIManager:
             self._print_error_message(resp)
         return success
 
-    def _revoke_access_token():
+    def _revoke_access_token(self):
         """
         Tells Twitch to dispose of the current access token. Handy for the
         sake of forcing the bot to get a new one.
@@ -71,7 +71,7 @@ class TwitchAPIManager:
             self._print_error_message(resp)
         return success
 
-    def _refresh_user_token():
+    def _refresh_user_token(self):
         resp = requests.post('https://id.twitch.tv/oauth2/token--data-urlencode?grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.clientauth)
         success = resp.status_code == requests.codes.ok
         if success:
@@ -89,32 +89,57 @@ class TwitchAPIManager:
             self._print_error_message(resp)
         return success
 
-    def set_stream_title(title):
+    def request_send_loop(self, request_func, params):
+        """
+        Repeats a request until it definitively succeeds or fails
+        """
         need_refresh = True
-        # Loop until we either succeed for fail for non-expired-token reasons
         while need_refresh:
             need_refresh = False
-            headers = {
-        		'Client-ID': self.clientid,
-        		'Accept': 'application/vnd.twitchtv.v5+json',
-        		'Authorization': 'OAuth ' + self.user_token,
-                'Content-Type': 'application/json',
-        	}
-
-            data = '{"channel": {"status": "'+title+'"}}'
-            resp = requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
+            resp = request_func(*params)
             success = resp.status_code == requests.codes.ok
             if success:
                 pass
-            elif resp.status_code == 401 and 'WWW-Authenticate' in r.headers: # Change None to the actual response to check
-                need_refresh = True
-                self._refresh_user_token()
+            elif resp.status_code == 401: #401 = Unauthorized, which COULD mean our token's just expired
+                for guy in resp.headers.items():
+                    print guy
+                print ''
+                if 'WWW-Authenticate' in resp.headers:
+                    need_refresh = True
+                    self._refresh_user_token()
             else:
                 print 'ERROR while setting stream title'
                 self._print_error_message(resp)
         return success
 
-    def set_clientid(newid):
+    def do_set_stream_title_request(self, title):
+        headers = {
+            'Client-ID': self.clientid,
+            'Accept': 'application/vnd.twitchtv.v5+json',
+            'Authorization': 'OAuth ' + self.user_token,
+            'Content-Type': 'application/json',
+        }
+
+        data = '{"channel": {"status": "'+title+'"}}'
+        return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
+
+    def set_stream_title(self, title):
+        return self.request_send_loop(self.do_set_stream_title_request, [title])
+
+    def do_set_stream_game_request(self, game):
+        headers = {
+            'Client-ID': self.clientid,
+            'Accept': 'application/vnd.twitchtv.v5+json',
+            'Authorization': 'OAuth ' + self.user_token,
+            'Content-Type': 'application/json',
+        }
+        data = '{"channel": {"game": "'+game+'"}}'
+        return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
+
+    def set_stream_game(self, game):
+        return self.request_send_loop(self.do_set_stream_game_request, [game])
+
+    def set_clientid(self, newid):
         """
         Sets the new clientid. Used in the event that the default id doesn't
         work for whatever reason.

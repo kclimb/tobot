@@ -156,8 +156,9 @@ class Handler:
 		"""
 		params = []
 		cmd_func = cmd[0]
-		if cmd_func == commands.settitle:
+		if cmd_func in commands.NEEDS_METADATA:
 			params.append(data)
+		if cmd_func in commands.NEEDS_API:
 			params.append(self.api_mgr)
 		return params
 

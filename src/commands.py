@@ -24,32 +24,46 @@ def saythanks():
 	"""
 	return 'thanks'
 
-def saytitle():
+def saytitle(api_mgr):
 	"""
-	Returns the title of the current game. Needs Twitch API access.
+	Returns the title of the stream. Needs Twitch API access.
 	"""
 	return "!title not implemented yet :("
 
-LOL = 0 # Set me to 0 once API stuff is set up.
 def settitle(title, metadata, api_mgr):
 	"""
 	Allows mods and broadcasters to set the title of the stream game.
 	Note that the 'title' parameter is specified by the chat message, but
 	user_type is supplied by this bot from parsing the chat message's metadata.
 	"""
-	print 'in settitle:', title
 	hdrs = metadata['headers']
 	channel = metadata['channel']
 	# If this person isn't a mod or the broadcaster, do a !title instead
 	if hdrs['mod'] == 0 and channel != hdrs['display-name'].lower():
 		return saytitle()
-	elif LOL:
-		return '!settitle not implemented yet :('
+
 	success = api_mgr.set_stream_title(title)
-	#response = requests.put('https://api.twitch.tv/kraken/channels/***CHANGE ME TO THE REAL CHANNEL ID***', headers=headers, data=data)
 	if success:
 		return 'Title is set to ' + title
 	return 'Failed to set title'
+
+def saygame(api_mgr):
+	"""
+	Returns the title of the current game. Needs Twitch API access.
+	"""
+	return '!game not implemented yet :('
+
+def setgame(game, metadata, api_mgr):
+	hdrs = metadata['headers']
+	channel = metadata['channel']
+	# If this person isn't a mod or the broadcaster, do a !title instead
+	if hdrs['mod'] == 0 and channel != hdrs['display-name'].lower():
+		return saygame(api_mgr)
+
+	success = api_mgr.set_stream_game(game)
+	if success:
+		return 'Game is set to ' + game
+	return 'Failed to set game'
 
 def nop():
 	"""
@@ -91,11 +105,12 @@ def list_commands():
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
-	'!commands':list_commands,'!dr':dr,'!hi':sayhi,'!hello':sayhello,'!settitle':settitle,
+	'!commands':list_commands,'!dr':dr,'!game':saygame,'!hi':sayhi,'!hello':sayhello,'!setgame':setgame,'!settitle':settitle,
 	'!title':saytitle,'!wr':wr,'gl':saythanks
 }
-DEFAULT_ARGC = {'!commands':0,'!dr':0,'!hi': 0,'!hello':1,'!settitle':1,'!title':0,'!wr':0,'gl':0}
-MIN_ARGC = {} #{'!title':0} This was a terrible idea should probably delete this but you never know, huh
+DEFAULT_ARGC = {'!commands':0,'!dr':0,'!game':0,'!hi': 0,'!hello':1,'!setgame':1,'!settitle':1,'!title':0,'!wr':0,'gl':0}
+NEEDS_METADATA = set([setgame, settitle])
+NEEDS_API = set([saygame, saytitle, setgame, settitle])
 
 # Other handy data things
 DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce', 'diego', 'dang']
