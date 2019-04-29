@@ -74,8 +74,10 @@ class TwitchAPIManager:
         return success
 
     def _refresh_user_token(self):
-        resp = requests.post('https://id.twitch.tv/oauth2/token--data-urlencode?grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.clientauth)
+        print 'REFRESHING...'
+        resp = requests.post('https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.authcode)
         success = resp.status_code == requests.codes.ok
+        print resp.status_code
         if success:
             jresp = resp.json()
             f = open('user_access.txt', 'w')
@@ -105,14 +107,14 @@ class TwitchAPIManager:
             if success:
                 pass
             elif resp.status_code == 401: #401 = Unauthorized, which COULD mean our token's just expired
-                for guy in resp.headers.items():
-                    print guy
-                print ''
+                #for guy in resp.headers.items():
+                #    print guy
+                #print ''
                 print resp.json()
                 print ''
-                if 'WWW-Authenticate' in resp.headers:
-                    need_refresh = True
-                    self._refresh_user_token()
+                #if 'WWW-Authenticate' in resp.headers: # Twitch claims this check is necessary but seems currently unimplemented on their side?
+                need_refresh = True
+                self._refresh_user_token()
             else:
                 print 'ERROR while setting stream title'
                 self._print_error_message(resp)
