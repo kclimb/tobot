@@ -9,11 +9,12 @@ class TwitchAPIManager:
     Handles direct interactions with Twitch APIs
     """
 
-    def __init__(self, auth=None,id=TOBOT_ID):
+    def __init__(self, auth=None,id=TOBOT_ID, v=True):
         """
         Initialize necessary info for API calls
         """
         self.clientid = id
+        self.verbose = v
         if auth == None:
             try:
                 f = open(AUTH_PATH)
@@ -53,7 +54,7 @@ class TwitchAPIManager:
         if resp.status_code == requests.codes.ok:
             success = True
             self.token = resp.json()['access_token']
-        else:
+        elif self.verbose:
             print 'ERROR failed to acquire access token'
             self._print_error_message(resp)
         return success
@@ -68,16 +69,22 @@ class TwitchAPIManager:
         # If revocation went fine, reset our internal token
         if success:
             self.token = ''
-        else:
+        elif self.verbose:
             print 'ERROR on revoking access token'
             self._print_error_message(resp)
         return success
 
     def _refresh_user_token(self):
-        print 'REFRESHING...'
+        """
+        Sends a user token refresh request to Twitch. Updates the user token
+        and refresh token on success.
+        """
+        if self.verbose:
+            print 'REFRESHING...'
         resp = requests.post('https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.authcode)
         success = resp.status_code == requests.codes.ok
-        print resp.status_code
+        if self.verbose:
+            print resp.status_code
         if success:
             jresp = resp.json()
             f = open('user_access.txt', 'w')
@@ -88,7 +95,7 @@ class TwitchAPIManager:
             f.write(jresp['refresh_token'])
             self.user_refresh_token = jresp['refresh_token']
             f.close()
-        else:
+        elif self.verbose:
             print 'ERROR on user token refresh:'
             self._print_error_message(resp)
         return success
@@ -97,7 +104,15 @@ class TwitchAPIManager:
 
     def _request_send_loop(self, request_func, params):
         """
-        Repeats a request until it definitively succeeds or fails
+        Repeats a request function until it definitively succeeds or fails.
+
+        In practice, this loop should succeed on the first pass, unless the
+        current user OAuth token is expired, in which case a refresh is performed,
+        and the request should succeed on the second pass.
+
+        All commands which send requests that supply a user OAuth token should
+        plug the request into this function to guarantee it doesn't fail due to
+        an expired token.
         """
         need_refresh = True
         while need_refresh:
@@ -110,20 +125,27 @@ class TwitchAPIManager:
                 #for guy in resp.headers.items():
                 #    print guy
                 #print ''
-                print resp.json()
-                print ''
+                if self.verbose:
+                    print resp.json()
+                    print ''
                 #if 'WWW-Authenticate' in resp.headers: # Twitch claims this check is necessary but seems currently unimplemented on their side?
                 need_refresh = True
                 self._refresh_user_token()
-            else:
+            elif self.verbose:
                 print 'ERROR while setting stream title'
                 self._print_error_message(resp)
         return success
 
     def _update_channel_request(self, channelid, headers, data):
+        """
+        Sends a PUT request for user channel data.
+        """
         return requests.put('https://api.twitch.tv/kraken/channels/'+channelid, headers=headers, data=data)
 
     def _get_channel_request(self):
+        """
+        Sends a GET request for user channel data.
+        """
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
@@ -133,6 +155,9 @@ class TwitchAPIManager:
 ############################ COMMAND LOGIC #####################################
 
     def _do_set_stream_title_request(self, title):
+        """
+        Sends request for !settitle
+        """
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
@@ -144,9 +169,15 @@ class TwitchAPIManager:
         return self._update_channel_request(TOBURR_USER_ID, headers, data)
 
     def set_stream_title(self, title):
+        """
+        Entry point for !settitle
+        """
         return self._request_send_loop(self._do_set_stream_title_request, [title])
 
     def _do_set_stream_game_request(self, game):
+        """
+        Sends request for !setgame
+        """
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
@@ -157,12 +188,21 @@ class TwitchAPIManager:
         return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
 
     def set_stream_game(self, game):
+        """
+        Entry point for !setgame
+        """
         return self._request_send_loop(self._do_set_stream_game_request, [game])
 
     def get_stream_title(self):
+        """
+        Entry point for !title
+        """
         return self._get_channel_request().json()['status']
 
     def get_stream_game(self):
+        """
+        Entry point for !game
+        """
         return self._get_channel_request().json()['game']
 
 #################################### MISC ######################################
