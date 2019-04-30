@@ -21,7 +21,8 @@ class TwitchAPIManager:
                 auth = f.read()
                 f.close()
             except:
-                print 'ERROR: could not find apiauth.txt'
+                if v:
+                    print 'ERROR: could not find apiauth.txt'
                 auth = ''
         self.authcode = auth
         self.token = ''
