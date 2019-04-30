@@ -38,10 +38,19 @@ class MapParser(Parser):
 		"""
 		return self.tokenizer.tokenize(message)
 
-	def _tokens_still_expected_error(self, commands):
+	def _parsing_error(self, commands, errorcmd):
+		"""
+		Tells the bot to print an error message due to an error parsing
+		a command.
+
+		"commands" - the currently parsed command list
+		"errorcmd" - a 2-tuple:
+			errorcmd[0] = the command function to run
+			errorcmd[1] = a list of parameters to errorcmd[0]
+		"""
 		print 'ERROR: not enough args passed to last command'
 		print 'Removing command from command list'
-		commands.pop(len(commands)-1)
+		commands[-1] = errorcmd
 		return commands
 
 	def _makecommandlist(self, tokens):
@@ -49,18 +58,18 @@ class MapParser(Parser):
 		Given a nonempty sequence of tokens, constructs an appropriate sequence of
 		behaviors with respect to the token sequence
 		"""
-		commands = []
+		cmnds = []
 		commandset = set([])
 		token_num = 0
 		while token_num < len(tokens):
 			# Stop if the message is trying to send too many commands (spam prevention)
-			if USE_COMMAND_HARDCAP and len(commands) >= MAX_COMMANDS_PER_MESSAGE:
-				return commands
+			if USE_COMMAND_HARDCAP and len(cmnds) >= MAX_COMMANDS_PER_MESSAGE:
+				return cmnds
 			try:
 				lowertoken = tokens[token_num].lower()
 				command = self.map[lowertoken]
 				if ALLOW_DUPLICATE_COMMANDS or lowertoken not in commandset:	# Don't allow users to spam the same command
-					commands.append((command, []))
+					cmnds.append((command, []))
 					commandset.add(lowertoken)
 					expected_args = self.argc[lowertoken]
 					# If a command is set to "infinity" expected args, that just
@@ -68,16 +77,16 @@ class MapParser(Parser):
 					if expected_args == float('inf'):
 						token_num += 1
 						if len(tokens) - token_num > 0:
-							commands[-1][1].append(tokens[token_num+1:]) # Note this is adding a single argument which is the remaining token list
+							cmnds[-1][1].append(tokens[token_num+1:]) # Note this is adding a single argument which is the remaining token list
 							token_num = len(tokens) # Make sure we end the function after this
 						else:
-							return self._tokens_still_expected_error(commands)
+							return self._parsing_error(cmnds, (commands.missing_token_error, ['1','0']))
 					else: # Finite number of tokens expected
 						stop_num = token_num + expected_args
 						while token_num < stop_num:
 							token_num += 1
 							if token_num >= len(tokens):
-								return self._tokens_still_expected_error(commands)
+								return self._parsing_error(cmnds, (commands.missing_token_error, [str(expected_args),str(expected_args-(stop_num-token_num)-1)]))
 
 							cur_token = tokens[token_num]
 							append_arg = cur_token
@@ -90,19 +99,18 @@ class MapParser(Parser):
 												  # we need to push back the stop num
 									if token_num >= len(tokens):
 										print 'No endquote token found'
-										return self._tokens_still_expected_error(commands)
+										return self._parsing_error(cmnds, (commands.missing_end_quote_error, []))
 									append_arg = append_arg + " " + tokens[token_num]
 								append_arg = append_arg.rstrip('"')
-							commands[-1][1].append(append_arg)
+							cmnds[-1][1].append(append_arg)
 			except KeyError:
 				# In the event of a self.map KeyError, we're simply ignoring an
 				# unknown token. For a self.argc KeyError, a command with no
 				# specified argc is assumed to have 0 paramters.
 					pass
 			token_num += 1
-			# We're expecting a parameter to the currently parsed command
 
-		return commands
+		return cmnds
 
 	def translate(self, message):
 		return self._makecommandlist(self._gettokens(message))
