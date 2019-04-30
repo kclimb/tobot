@@ -104,6 +104,11 @@ def list_commands():
 			retstring = retstring + guy + '\r'
 	return retstring
 
+def missing_token_error(expected, actual):
+	return "Command failed. Expected "+expected+" parameters but received "+actual+"."
+
+def missing_end_quote_error():
+	return "Command failed. Could not find ending quotation mark. Make sure the end quote is the last character of the word."
 
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
