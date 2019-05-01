@@ -6,7 +6,7 @@ the bot to not reply at all
 """
 import random
 
-GAME_ABBREVIATIONS = {'sck': 'Nancy Drew: Secrets Can Kill', 'stfd': 'Nancy Drew: Stay Tuned for Danger', 'mhm': 'Nancy Drew: Message in a Haunted Mansion','sha': 'Nancy Drew: The Secret of Shadow Ranch', 'cur': 'Nancy Drew: Curse of Blackmoor Manor'}
+GAME_ABBREVIATIONS = {'sck':'Nancy Drew: Secrets Can Kill','stfd':'Nancy Drew: Stay Tuned for Danger','mhm':'Nancy Drew: Message in a Haunted Mansion','trt':'Nancy Drew: Treasure in the Royal Tower','fin':'Nancy Drew: The Final Scene','sha': 'Nancy Drew: The Secret of Shadow Ranch','cur':'Nancy Drew: Curse of Blackmoor Manor'}
 
 def sayhi():
 	"""
