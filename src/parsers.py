@@ -80,7 +80,7 @@ class MapParser(Parser):
 							cmnds[-1][1].append(tokens[token_num+1:]) # Note this is adding a single argument which is the remaining token list
 							token_num = len(tokens) # Make sure we end the function after this
 						else:
-							return self._parsing_error(cmnds, (commands.missing_token_error, ['1','0']))
+							return self._parsing_error(cmnds, (commands.missing_token_error, ['one or more','0']))
 					else: # Finite number of tokens expected
 						stop_num = token_num + expected_args
 						while token_num < stop_num:

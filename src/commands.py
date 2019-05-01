@@ -6,6 +6,8 @@ the bot to not reply at all
 """
 import random
 
+GAME_ABBREVIATIONS = {'sck': 'Nancy Drew: Secrets Can Kill', 'stfd': 'Nancy Drew: Stay Tuned for Danger', 'mhm': 'Nancy Drew: Message in a Haunted Mansion','sha': 'Nancy Drew: The Secret of Shadow Ranch', 'cur': 'Nancy Drew: Curse of Blackmoor Manor'}
+
 def sayhi():
 	"""
 	:)
@@ -63,17 +65,14 @@ def setgame(game, metadata, api_mgr):
 	if hdrs['mod'] == '0' and channel != hdrs['display-name'].lower():
 		return saygame(api_mgr)
 
+	try:
+		game = GAME_ABBREVIATIONS[game]
+	except KeyError:
+		pass
 	success = api_mgr.set_stream_game(game)
 	if success:
 		return 'Game is set to ' + game
 	return 'Failed to set game'
-
-def nop():
-	"""
-	It does nothing. Leftover from when I thought it was a good idea to force
-	the bot to have a designated response for every type of chat message.
-	"""
-	return None
 
 def dr():
 	"""
