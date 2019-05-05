@@ -4,9 +4,10 @@ All the behaviors toburobo is capable of
 All return values must be strings which the bot replies to the IRC server with. Return None for
 the bot to not reply at all
 """
+import json
 import random
 
-GAME_ABBREVIATIONS = {'sck':'Nancy Drew: Secrets Can Kill','stfd':'Nancy Drew: Stay Tuned for Danger','mhm':'Nancy Drew: Message in a Haunted Mansion','trt':'Nancy Drew: Treasure in the Royal Tower','fin':'Nancy Drew: The Final Scene','sha': 'Nancy Drew: The Secret of Shadow Ranch','cur':'Nancy Drew: Curse of Blackmoor Manor'}
+GAME_ABBREVIATIONS = json.loads(open('gamecodes.txt').read())
 
 def sayhi():
 	"""
@@ -88,6 +89,33 @@ def wr():
 	"""
 	return "it doesn't matter :)"
 
+def addgamename(code, fullname):
+	if code not in GAME_ABBREVIATIONS:
+		#GAME_ABBREVIATIONS[code] = fullname
+		f = open('gamecodes.txt','w')
+		f.write(json.dumps(GAME_ABBREVIATIONS))
+		f.close()
+		return 'Successfully added abbreviation '+code+' for game: '+fullname+'.'
+	return 'The abbreviation '+code+' is already in use for the game: '+GAME_ABBREVIATIONS[code] +'.'
+
+def editgamename(code, newname):
+	if code in GAME_ABBREVIATIONS:
+		GAME_ABBREVIATIONS[code] = newname
+		f = open('gamecodes.txt','w')
+		f.write(json.dumps(GAME_ABBREVIATIONS))
+		f.close()
+		return 'Successfully added abbreviation '+code+' for game: '+fullname+'.'
+	return addgamename(code, newname)
+
+def removegamename(code):
+	val = GAME_ABBREVIATIONS.pop(code, None)
+	if val == None:
+		return 'Abbreviation '+code+' not found.'
+	f = open('gamecodes.txt','w')
+	f.write(json.dumps(GAME_ABBREVIATIONS))
+	f.close()
+	return 'Successfully removed abbreviation '+code+'.'
+
 def list_commands():
 	"""
 	Returns a list of all* commands currently supported by this bot.
@@ -115,10 +143,10 @@ def missing_end_quote_error():
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
-	'!commands':list_commands,'!dr':dr,'!game':saygame,'!hi':sayhi,'!hello':sayhello,'!setgame':setgame,'!settitle':settitle,
+	'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editgamename':editgamename,'!game':saygame,'!hi':sayhi,'!hello':sayhello,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
 	'!title':saytitle,'!wr':wr,'gl':saythanks
 }
-DEFAULT_ARGC = {'!commands':0,'!dr':0,'!game':0,'!hi': 0,'!hello':1,'!setgame':1,'!settitle':1,'!title':0,'!wr':0,'gl':0}
+DEFAULT_ARGC = {'!addgamename':2,'!commands':0,'!dr':0,'!editgamename':2,'!game':0,'!hi': 0,'!hello':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,'!wr':0,'gl':0}
 NEEDS_METADATA = set([setgame, settitle])
 NEEDS_API = set([saygame, saytitle, setgame, settitle])
 
