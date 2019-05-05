@@ -8,11 +8,7 @@ import json
 import random
 
 GAME_ABBREVIATIONS = json.loads(open('gamecodes.txt').read())
-TEXT_COMMANDS = {#json.loads(open('textcommands.txt').read())
-	'!hi': 'hi :)',
-	'gl': 'thanks',
-	'!wr': "it doesn't matter :)",
-}
+TEXT_COMMANDS = json.loads(open('textcommands.txt').read())
 
 def isTextCommand(key):
 	return key in TEXT_COMMANDS
@@ -121,6 +117,39 @@ def removegamename(code, metadata):
 	f.close()
 	return 'Successfully removed abbreviation '+code
 
+def addcmd(cmd, response, metadata):
+	if not userIsModPlus(metadata):
+		return "You don't have permission to add commands."
+	if cmd not in TEXT_COMMANDS:
+		TEXT_COMMANDS[cmd] = response
+		f = open('textcommands.txt','w')
+		f.write(json.dumps(TEXT_COMMANDS))
+		f.close()
+		return 'Successfully added command '+cmd
+	return 'The command '+cmd+' is already in use.'
+
+def editcmd(cmd, new_response, metadata):
+	if not userIsModPlus(metadata):
+		return "You don't have permission to edit commands."
+	if cmd in TEXT_COMMANDS:
+		TEXT_COMMANDS[cmd] = new_response
+		f = open('textcommands.txt','w')
+		f.write(json.dumps(TEXT_COMMANDS))
+		f.close()
+		return 'Successfully modified command '+cmd
+	return addcmd(cmd, new_response, metadata)
+
+def removecmd(cmd, metadata):
+	if not userIsModPlus(metadata):
+		return "You don't have permission to remove commands."
+	val = TEXT_COMMANDS.pop(cmd, None)
+	if val == None:
+		return 'Command '+cmd+' not found.'
+	f = open('textcommands.txt','w')
+	f.write(json.dumps(TEXT_COMMANDS))
+	f.close()
+	return 'Successfully remove command '+cmd
+
 def list_commands():
 	"""
 	Returns a list of all* commands currently supported by this bot.
@@ -132,6 +161,9 @@ def list_commands():
 	"""
 	retstring = ''
 	for guy in DEFAULT_COMMANDS.keys():
+		if guy.startswith('!'):
+			retstring = retstring + guy + '\r'
+	for guy in TEXT_COMMANDS.keys():
 		if guy.startswith('!'):
 			retstring = retstring + guy + '\r'
 	return retstring
@@ -148,11 +180,12 @@ def missing_end_quote_error():
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
-	'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
+	'!addcmd':addcmd,'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
+	'!removecmd':removecmd,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
 	'!title':saytitle,
 }
-DEFAULT_ARGC = {'!addgamename':2,'!commands':0,'!dr':0,'!editgamename':2,'!game':0,'!hello':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,}
-NEEDS_METADATA = set([setgame,settitle,addgamename,editgamename,removegamename])
+DEFAULT_ARGC = {'!addcmd':2,'!addgamename':2,'!commands':0,'!dr':0,'!editcmd':2,'!editgamename':2,'!game':0,'!hello':1,'!removecmd':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,}
+NEEDS_METADATA = set([setgame,settitle,addcmd,addgamename,editcmd,editgamename,removecmd,removegamename])
 NEEDS_API = set([saygame, saytitle, setgame, settitle])
 
 # Other handy data things
