@@ -35,19 +35,26 @@ def saytitle(api_mgr):
 	"""
 	return 'Stream title is: '+api_mgr.get_stream_title()
 
+def userIsModPlus(metadata):
+	"""
+	Returns whether the message sender is the mod or channel owner.
+	"""
+	try:
+		hdrs = metadata['headers']
+		channel = metadata['channel']
+		return channel == hdrs['display-name'].lower() or hdrs['mod'] != 0
+	except KeyError:
+		print 'ERROR: Missing key from metadata'
+	return False
+
 def settitle(title, metadata, api_mgr):
 	"""
 	Allows mods and broadcasters to set the title of the stream game.
 	Note that the 'title' parameter is specified by the chat message, but
 	user_type is supplied by this bot from parsing the chat message's metadata.
 	"""
-	hdrs = metadata['headers']
-	channel = metadata['channel']
-	print 'HDRS'
-	for guy in hdrs.items():
-		print guy
 	# If this person isn't a mod or the broadcaster, do a !title instead
-	if hdrs['mod'] == '0' and channel != hdrs['display-name'].lower():
+	if not userIsModPlus(metadata):
 		return saytitle(api_mgr)
 
 	success = api_mgr.set_stream_title(title)
@@ -62,16 +69,14 @@ def saygame(api_mgr):
 	return 'Game is: '+api_mgr.get_stream_game()
 
 def setgame(game, metadata, api_mgr):
-	hdrs = metadata['headers']
-	channel = metadata['channel']
 	# If this person isn't a mod or the broadcaster, do a !title instead
-	if hdrs['mod'] == '0' and channel != hdrs['display-name'].lower():
+	if not userIsModPlus(metadata):
 		return saygame(api_mgr)
 
 	try:
 		game = GAME_ABBREVIATIONS[game]
 	except KeyError:
-		pass
+		pass # A key error here is fine, just means we don't have an abbreviation
 	success = api_mgr.set_stream_game(game)
 	if success:
 		return 'Game is set to ' + game
@@ -83,32 +88,38 @@ def dr():
 	"""
 	return random.choice(DANGAN) + ' ' + random.choice(RONPA)
 
-def addgamename(code, fullname):
+def addgamename(code, fullname, metadata):
+	if not userIsModPlus(metadata):
+		return "You don't have permission to add a game abbreviation."
 	if code not in GAME_ABBREVIATIONS:
-		#GAME_ABBREVIATIONS[code] = fullname
+		GAME_ABBREVIATIONS[code] = fullname
 		f = open('gamecodes.txt','w')
 		f.write(json.dumps(GAME_ABBREVIATIONS))
 		f.close()
 		return 'Successfully added abbreviation '+code+' for game: '+fullname+'.'
-	return 'The abbreviation '+code+' is already in use for the game: '+GAME_ABBREVIATIONS[code] +'.'
+	return 'The abbreviation '+code+' is already in use for the game: '+GAME_ABBREVIATIONS[code]
 
-def editgamename(code, newname):
+def editgamename(code, newname, metadata):
+	if not userIsModPlus(metadata):
+		return "You don't have permission to edit a game abbreviation."
 	if code in GAME_ABBREVIATIONS:
 		GAME_ABBREVIATIONS[code] = newname
 		f = open('gamecodes.txt','w')
 		f.write(json.dumps(GAME_ABBREVIATIONS))
 		f.close()
-		return 'Successfully added abbreviation '+code+' for game: '+fullname+'.'
-	return addgamename(code, newname)
+		return 'Successfully set abbreviation '+code+' to game: '+newname
+	return addgamename(code, newname, metadata)
 
-def removegamename(code):
+def removegamename(code, metadata):
+	if not userIsModPlus(metadata):
+		return "You don't have permission to remove a game abbreviation."
 	val = GAME_ABBREVIATIONS.pop(code, None)
 	if val == None:
 		return 'Abbreviation '+code+' not found.'
 	f = open('gamecodes.txt','w')
 	f.write(json.dumps(GAME_ABBREVIATIONS))
 	f.close()
-	return 'Successfully removed abbreviation '+code+'.'
+	return 'Successfully removed abbreviation '+code
 
 def list_commands():
 	"""
@@ -141,7 +152,7 @@ DEFAULT_COMMANDS = {
 	'!title':saytitle,
 }
 DEFAULT_ARGC = {'!addgamename':2,'!commands':0,'!dr':0,'!editgamename':2,'!game':0,'!hello':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,}
-NEEDS_METADATA = set([setgame, settitle])
+NEEDS_METADATA = set([setgame,settitle,addgamename,editgamename,removegamename])
 NEEDS_API = set([saygame, saytitle, setgame, settitle])
 
 # Other handy data things
