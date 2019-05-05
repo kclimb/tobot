@@ -8,24 +8,26 @@ import json
 import random
 
 GAME_ABBREVIATIONS = json.loads(open('gamecodes.txt').read())
+TEXT_COMMANDS = {#json.loads(open('textcommands.txt').read())
+	'!hi': 'hi :)',
+	'gl': 'thanks',
+	'!wr': "it doesn't matter :)",
+}
 
-def sayhi():
-	"""
-	:)
-	"""
-	return 'hi :)'
+def isTextCommand(key):
+	return key in TEXT_COMMANDS
+
+def doTextCommand(key):
+	try:
+		return TEXT_COMMANDS[key]
+	except KeyError:
+		return None
 
 def sayhello(name):
 	"""
 	Yes, this bot does have multiple greeting commands. Saying hi is important.
 	"""
-	return 'hello '+name+'!'
-
-def saythanks():
-	"""
-	This bot is polite, dammit.
-	"""
-	return 'thanks'
+	return 'hello '+name+'! Welcome to the stream toburrArr'
 
 def saytitle(api_mgr):
 	"""
@@ -81,14 +83,6 @@ def dr():
 	"""
 	return random.choice(DANGAN) + ' ' + random.choice(RONPA)
 
-def wr():
-	"""
-	Fetches the World Record for the main speedrunning category of the current game.
-
-	Yes, I am very aware it just returns a string.
-	"""
-	return "it doesn't matter :)"
-
 def addgamename(code, fullname):
 	if code not in GAME_ABBREVIATIONS:
 		#GAME_ABBREVIATIONS[code] = fullname
@@ -143,10 +137,10 @@ def missing_end_quote_error():
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
-	'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editgamename':editgamename,'!game':saygame,'!hi':sayhi,'!hello':sayhello,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
-	'!title':saytitle,'!wr':wr,'gl':saythanks
+	'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
+	'!title':saytitle,
 }
-DEFAULT_ARGC = {'!addgamename':2,'!commands':0,'!dr':0,'!editgamename':2,'!game':0,'!hi': 0,'!hello':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,'!wr':0,'gl':0}
+DEFAULT_ARGC = {'!addgamename':2,'!commands':0,'!dr':0,'!editgamename':2,'!game':0,'!hello':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,}
 NEEDS_METADATA = set([setgame, settitle])
 NEEDS_API = set([saygame, saytitle, setgame, settitle])
 

@@ -71,7 +71,11 @@ class MapParser(Parser):
 				if ALLOW_DUPLICATE_COMMANDS or lowertoken not in commandset:	# Don't allow users to spam the same command
 					cmnds.append((command, []))
 					commandset.add(lowertoken)
-					expected_args = self.argc[lowertoken]
+					try:
+						expected_args = self.argc[lowertoken]
+					except KeyError:
+						# If we don't have a defined number of params, assume 0
+						expected_args = 0
 					# If a command is set to "infinity" expected args, that just
 					# means the rest of the tokens are one big argument
 					if expected_args == float('inf'):
@@ -104,10 +108,13 @@ class MapParser(Parser):
 								append_arg = append_arg.rstrip('"')
 							cmnds[-1][1].append(append_arg)
 			except KeyError:
-				# In the event of a self.map KeyError, we're simply ignoring an
-				# unknown token. For a self.argc KeyError, a command with no
-				# specified argc is assumed to have 0 paramters.
-					pass
+				# In the event of a self.map KeyError, we either:
+				#	1) Have a dynamically defined command (in which case we run
+				#	   doTextCommand with the token as an arg), or
+				#	2) We're simply ignoring an unknown token.
+				if commands.isTextCommand(lowertoken):
+					cmnds.append((commands.doTextCommand, [lowertoken]))
+
 			token_num += 1
 
 		return cmnds
