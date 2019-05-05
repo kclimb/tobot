@@ -105,7 +105,7 @@ class MapParser(Parser):
 										print 'No endquote token found'
 										return self._parsing_error(cmnds, (commands.missing_end_quote_error, []))
 									append_arg = append_arg + " " + tokens[token_num]
-								append_arg = append_arg.rstrip('"')
+								append_arg = append_arg[:len(append_arg)-1]
 							cmnds[-1][1].append(append_arg)
 			except KeyError:
 				# In the event of a self.map KeyError, we either:
