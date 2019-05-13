@@ -1,5 +1,5 @@
 """
-All the behaviors toburobo is capable of
+All the behaviors tobot is capable of
 
 All return values must be strings which the bot replies to the IRC server with. Return None for
 the bot to not reply at all
@@ -178,7 +178,7 @@ def missing_end_quote_error():
 	return "Command failed. Could not find ending quotation mark. Make sure the end quote is at the end of a word."
 
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
-# Note there may be more actual arguments that toburobo needs to supply (from message headers, credentials, etc)
+# Note there may be more actual arguments that tobot needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
 	'!addcmd':addcmd,'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
 	'!removecmd':removecmd,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,

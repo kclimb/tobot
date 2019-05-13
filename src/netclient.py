@@ -4,7 +4,7 @@ import ssl
 import time
 
 TWITCH_SERVER = 'irc.chat.twitch.tv' # Default connection hostname. Bot currently only supports Twitch, no plans to change that
-BOT_NAME = 'toburobo'
+BOT_NAME = 'tobot'
 DEFAULT_CHANNEL = 'toburr'
 DEFAULT_RECV_BUFSIZE = 4096
 
@@ -35,8 +35,8 @@ class InsecureMyRCClient(IRCClient):
 		self.port = 6667
 
 	# Needs to know:
-	#	- client name (always toburobo)
-	#	- client's oauth token (toburobo's oauth token: not included in this code because secrets)
+	#	- client name (always tobot)
+	#	- client's oauth token (tobot's oauth token: not included in this code because secrets)
 	#	- channel to be a part of (can be any twitch user channel; defaults to Toburr)
 	def connect(self, chan=DEFAULT_CHANNEL):
 		"""
@@ -158,7 +158,7 @@ class InsecureMyRCClient(IRCClient):
 		Throws error if sock doesn't exist or is disconnected.
 		"""
 		# First, connect to twitch server with our credentials
-		sock.sendall('PASS oauth:' + self.oauth + '\nNICK toburobo\n') # TODO: generalize bot name stuff
+		sock.sendall('PASS oauth:' + self.oauth + '\nNICK tobot\n') # TODO: generalize bot name stuff
 		if self.verbose:
 			print 'receiving login response...'
 		x = sock.recv(1024)
@@ -205,7 +205,7 @@ class InsecureMyRCClient(IRCClient):
 		joins a given channel.
 		"""
 		if chan in self.channels:
-			print 'Error: toburobo is already in channel: ' + chan
+			print 'Error: tobot is already in channel: ' + chan
 			return
 		if self.verbose:
 			print 'Joining channel ' + chan + '...'
@@ -226,7 +226,7 @@ class InsecureMyRCClient(IRCClient):
 		has the socket depart that channel.
 		"""
 		if chan not in self.channels:
-			print 'Error: toburobo already not in channel: ' + chan
+			print 'Error: tobot already not in channel: ' + chan
 			return
 		if self.verbose:
 			print 'Departing from channel ' + chan + '...'

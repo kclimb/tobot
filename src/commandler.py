@@ -254,15 +254,15 @@ clearchat_ex = "@ban-reason=;room-id=77780959;target-user-id=236791797;tmi-sent-
 clearchat2_ex = "@room-id=77780959;tmi-sent-ts=1534835137593 :tmi.twitch.tv CLEARCHAT #toburr\r\n" # Whole chat clear
 hosttarget_ex = ":tmi.twitch.tv HOSTTARGET #toburr :- 0\r\n"
 join_ex = ":toburr!toburr@toburr.tmi.twitch.tv JOIN #toburr\r\n"
-mode_ex = ":jtv MODE #toburr +o toburobo\r\n"
+mode_ex = ":jtv MODE #toburr +o tobot\r\n"
 notice_ex = "@msg-id=host_target_went_offline :tmi.twitch.tv NOTICE #toburr :alittlelisa has gone offline. Exiting host mode.\r\n"
 part_ex = ":toburr!toburr@toburr.tmi.twitch.tv PART #toburr\r\n"
 ping_ex = "PING :tmi.twitch.tv\r\n"
 privmsg_ex = "@badges=broadcaster/1,premium/1;color=#106F73;display-name=Toburr;emotes=;id=c17fbc52-e48c-4f6f-9e5d-be7ed47d7404;mod=0;room-id=77780959;subscriber=0;tmi-sent-ts=1534012954836;turbo=0;user-id=77780959;user-type= :toburr!toburr@toburr.tmi.twitch.tv PRIVMSG #toburr :5\r\n"
 roomstate_ex = "@broadcaster-lang=;emote-only=0;followers-only=-1;r9k=0;rituals=0;room-id=77780959;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #toburr\r\n"
-userstate_ex = "@badges=moderator/1;color=;display-name=toburobo;emote-sets=0;mod=1;subscriber=0;user-type=mod :tmi.twitch.tv USERSTATE #toburr\r\n"
+userstate_ex = "@badges=moderator/1;color=;display-name=tobot;emote-sets=0;mod=1;subscriber=0;user-type=mod :tmi.twitch.tv USERSTATE #toburr\r\n"
 
-#test = "@badge-info=;badges=moderator/1,premium/1;color=;display-name=toburobo;emotes=;flags=;id=de613730-b8b2-4048-b701-0fc4c3659b91;mod=1;room-id=77780959;subscriber=0;tmi-sent-ts=1556060247754;turbo=0;user-id=185295401;user-type=mod :toburobo!toburobo@toburobo.tmi.twitch.tv PRIVMSG #toburr :!settitle a b c d test\r\n"
+#test = "@badge-info=;badges=moderator/1,premium/1;color=;display-name=tobot;emotes=;flags=;id=de613730-b8b2-4048-b701-0fc4c3659b91;mod=1;room-id=77780959;subscriber=0;tmi-sent-ts=1556060247754;turbo=0;user-id=185295401;user-type=mod :tobot!tobot@tobot.tmi.twitch.tv PRIVMSG #toburr :!settitle a b c d test\r\n"
 #h = Handler()
 #h.update_msg_queue(test)
 #r = h.process_msg()

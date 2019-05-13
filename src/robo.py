@@ -62,5 +62,5 @@ class Robo:
 
 # r = Robo()
 # r.handler = handler.Handler()
-# r.handler.handle('toburobo: !hi')
+# r.handler.handle('tobot: !hi')
 #print threading.active_count()
