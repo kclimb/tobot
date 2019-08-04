@@ -1,1 +1,1 @@
-{"gl": "thanks", "!hi": "hi :)", "!wr": "it doesn't matter :)"}
+{"!facecam": "https://www.youtube.com/watch?v=GBv65ksCA7I", "!blind": "Hi! I'm playing this game for the first time. Please don't give me any hints or tips, no matter how small, unless I very explicitly ask for them. Those are as spoilery as actual spoilers themselves. Thank you, and enjoy the stream! :)", "!commands": "https://pastebin.com/zGaFV4ZE", "!hi": "hi :)", "!wr": "it doesn't matter :)", "!help": "https://pastebin.com/zGaFV4ZE", "gl": "thanks"}

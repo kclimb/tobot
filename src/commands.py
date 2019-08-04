@@ -148,25 +148,7 @@ def removecmd(cmd, metadata):
 	f = open('textcommands.txt','w')
 	f.write(json.dumps(TEXT_COMMANDS))
 	f.close()
-	return 'Successfully remove command '+cmd
-
-def list_commands():
-	"""
-	Returns a list of all* commands currently supported by this bot.
-
-	*Well some things are more fun kept a secret**
-
-	**Ok sure it's not a secret if you just look at the commands map. But where's
-	the fun in that? Killjoy.
-	"""
-	retstring = ''
-	for guy in DEFAULT_COMMANDS.keys():
-		if guy.startswith('!'):
-			retstring = retstring + guy + '\r'
-	for guy in TEXT_COMMANDS.keys():
-		if guy.startswith('!'):
-			retstring = retstring + guy + '\r'
-	return retstring
+	return 'Successfully removed command '+cmd
 
 def missing_token_error(expected, actual):
 	parameters = 'parameters'
@@ -180,7 +162,7 @@ def missing_end_quote_error():
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that tobot needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
-	'!addcmd':addcmd,'!addgamename':addgamename,'!commands':list_commands,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
+	'!addcmd':addcmd,'!addgamename':addgamename,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
 	'!removecmd':removecmd,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
 	'!title':saytitle,
 }
