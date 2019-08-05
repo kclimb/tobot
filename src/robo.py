@@ -47,15 +47,17 @@ class Robo:
 		return ""
 
 	def process(self):
+		"""
+		Process the messages currently sitting in the message queue
+		"""
 		# print 'robo processing'
-		responses,isprivmsg = self.handler.process_msg()
-		sendcount = 0
-		for resp in responses:
-			self.send(resp, isprivmsg)
-			sendcount += 1
-		if sendcount == 0 and self.verbose:
-			print 'No more messages to process'
-		return sendcount
+		while not self.handler.queue_empty():
+			responses,isprivmsg = self.handler.process_msg()
+			for resp in responses:
+				self.send(resp, isprivmsg)
+		if self.verbose:
+			print "Finished processing messages"
+		return ""
 
 	def isrunning(self):
 		return self.running

@@ -104,8 +104,17 @@ class Handler:
 		self.delimeter = d
 		self.verbose = v
 
-		# Primed with an empty string because queue should never be empty.
-		# See parse_socket_data for details.
+		# msg_q primed with an empty string because queue should never be empty.
+		# The last element of the queue is always a partial message, usually ''.
+
+		# When we parse a full message from the irc server (that is, ends with
+		# '\n'), then .split() will return an array where the last element is ''
+		# if it's delimiting by \n (which it should!)
+
+		# When the parsed message is incomplete (doesn't end with \n), then we
+		# don't have the whole message, so we can't interpret it yet. We keep
+		# this incomplete message at the end of the queue, and add the rest of
+		# the message the next time we receive data from the server.
 		self.msg_q = ['']
 		self.api_mgr = api.TwitchAPIManager()
 
@@ -195,7 +204,7 @@ class Handler:
 			would try that.)
 		"""
 		if 'type' not in data:
-			return []
+			return ([],True)
 		else:
 			msgtype = data['type']
 
@@ -247,6 +256,14 @@ class Handler:
 			# Add all the other messages to the queue
 			for msg in msgs[1:]:
 				self.msg_q.append(msg)
+			print 'Length of message queue:', len(self.msg_q)
+
+	def queue_empty(self):
+		"""
+		Returns whether the message queue is empty.
+		"""
+		return len(self.msg_q) <= 1
+
 
 
 # Message examples:

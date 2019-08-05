@@ -18,8 +18,7 @@ def main():
 	while True:
 		if r.recv() == -1:      # Wait for incoming data
 			break
-		while r.process() > 0:  # Process messages til none are left
-			pass
+		r.process()  # Process messages til none are left
 
 if __name__ == "__main__":
     main()
