@@ -86,7 +86,7 @@ class InsecureMyRCClient(IRCClient):
 			while not sock_ready[0]:
 				# We shouldn't get here, but if we do, try again
 				sock_ready = select.select([self.socket], [], [])
-			m = self.socket.recv(bufsize).decode()
+			m = self.socket.recv(bufsize).decode('utf-8')
 			# ms = m.split('\r\n')
 			# for guy in ms:
 			# 	print '"' + guy + '"'
