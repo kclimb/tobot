@@ -10,12 +10,15 @@ class Robo:
 	"""
 	def __init__(self, netpass, v=True):
 		self.running = False
-		self.client = client.InsecureMyRCClient(netpass)
-		self.handler = handler.Handler()
-		self.verbose = True
+		self.netpass = netpass
+		self.client = None
+		self.handler = None
+		self.verbose = v
 
 	def start(self):
 		if not self.running:
+			self.client = client.InsecureMyRCClient(self.netpass)
+			self.handler = handler.Handler()
 			succ = self.client.connect() # Default method connects to toburr
 			if succ:
 				self.running = True
@@ -27,6 +30,8 @@ class Robo:
 
 	def stop(self):
 		self.running = False
+		self.client = None
+		self.handler = None
 
 	def send(self, message, isprivmsg=True):
 		if self.running:

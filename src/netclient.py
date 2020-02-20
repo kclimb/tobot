@@ -43,7 +43,7 @@ class InsecureMyRCClient(IRCClient):
 		Connects this client to a specific user's chatroom
 		"""
 		if chan in self.channels:
-			if verbose:
+			if self.verbose:
 				print 'Already in the specified channel'
 			return False
 		# Set up socket if it's our first connection

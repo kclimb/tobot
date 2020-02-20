@@ -18,6 +18,11 @@ def main():
 	while True:
 		if r.recv() == -1:      # Wait for incoming data
 			break
+		if not r.client.is_connected: # If we disconnect while reading data, try rebooting
+			print "Client was disconnected. Attempting to reboot..."
+			r.stop()
+			r.start()
+			continue
 		r.process()  # Process messages til none are left
 
 if __name__ == "__main__":
