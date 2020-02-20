@@ -171,5 +171,5 @@ NEEDS_METADATA = set([setgame,settitle,addcmd,addgamename,editcmd,editgamename,r
 NEEDS_API = set([saygame, saytitle, setgame, settitle])
 
 # Other handy data things
-DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce', 'diego', 'dang']
+DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce', 'diego', 'dang', 'dragon']
 RONPA = ['ron paul', 'romper', 'rumbo', 'rumble', 'rumpus', 'rambo', 'renpy', 'rumba', 'ringo', 'rondo', 'papa']
