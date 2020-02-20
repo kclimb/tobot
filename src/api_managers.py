@@ -2,7 +2,7 @@ import requests
 
 TOBOT_ID = 'aoql74lx3merlu6t3od1wcfhn44u72'
 TOBURR_USER_ID = '77780959'
-AUTH_PATH = 'apiauth.txt'
+TWITCH_AUTH_PATH = 'twitchapiauth.txt'
 
 class TwitchAPIManager:
     """
@@ -17,12 +17,12 @@ class TwitchAPIManager:
         self.verbose = v
         if auth == None:
             try:
-                f = open(AUTH_PATH)
+                f = open(TWITCH_AUTH_PATH)
                 auth = f.read()
                 f.close()
             except:
                 if v:
-                    print 'ERROR: could not find apiauth.txt'
+                    print 'ERROR: could not find twitchapiauth.txt'
                 auth = ''
         self.authcode = auth
         self.token = ''
@@ -42,7 +42,7 @@ class TwitchAPIManager:
             print 'Text:',response.text
         print ''
 
-############################# ACCESS TOKEN THINGS #############################
+    ############################# ACCESS TOKEN THINGS #############################
 
     def _acquire_access_token(self, scope=''):
         """
@@ -101,7 +101,7 @@ class TwitchAPIManager:
             self._print_error_message(resp)
         return success
 
-########################### HTTP REQUEST LOGIC ################################
+    ########################### HTTP REQUEST LOGIC ################################
 
     def _request_send_loop(self, request_func, params):
         """
@@ -153,7 +153,7 @@ class TwitchAPIManager:
         }
         return requests.get('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers)
 
-############################ COMMAND LOGIC #####################################
+    ############################ COMMAND LOGIC #####################################
 
     def _do_set_stream_title_request(self, title):
         """
@@ -206,7 +206,7 @@ class TwitchAPIManager:
         """
         return self._get_channel_request().json()['game']
 
-#################################### MISC ######################################
+    #################################### MISC ######################################
 
     def set_clientid(self, newid):
         """
@@ -214,3 +214,12 @@ class TwitchAPIManager:
         work for whatever reason.
         """
         self.clientid = newid
+
+#####################################################################################
+#################################### SRC Stuff ######################################
+#####################################################################################
+
+class SpeedrunComAPIManager:
+    """
+    Handles interactions with speedrun.com
+    """
