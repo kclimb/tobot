@@ -116,7 +116,8 @@ class Handler:
 		# this incomplete message at the end of the queue, and add the rest of
 		# the message the next time we receive data from the server.
 		self.msg_q = ['']
-		self.api_mgr = api.TwitchAPIManager()
+		self.twitch_api_mgr = api.TwitchAPIManager()
+		self.src_api_mgr = api.SpeedrunComAPIManager()
 
 	def _parse_raw_msg(self, inputmsg):
 		"""
@@ -167,8 +168,10 @@ class Handler:
 		cmd_func = cmd[0]
 		if cmd_func in commands.NEEDS_METADATA:
 			params.append(data)
-		if cmd_func in commands.NEEDS_API:
-			params.append(self.api_mgr)
+		if cmd_func in commands.NEEDS_TWITCH_API:
+			params.append(self.twitch_api_mgr)
+		if cmd_func in commands.NEEDS_SRC_API:
+			params.append(self.src_api_mgr)
 		return params
 
 	def _do_commands(self, command_list, data):

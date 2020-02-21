@@ -1,8 +1,10 @@
 import requests
+import urllib
 
 TOBOT_ID = 'aoql74lx3merlu6t3od1wcfhn44u72'
 TOBURR_USER_ID = '77780959'
 TWITCH_AUTH_PATH = 'twitchapiauth.txt'
+SRC_AUTH_PATH = ''
 
 class TwitchAPIManager:
     """
@@ -223,3 +225,51 @@ class SpeedrunComAPIManager:
     """
     Handles interactions with speedrun.com
     """
+
+    def __init__(self):
+        self.gamecache = {}
+
+    def _get_game_name_request(self,name):
+        """
+        Returns a speedrun.com API request querying the games list by name.
+
+        This should generally only be used to fetch game id. All other API
+        game queries should use _get_game_id_request once they have the id.
+        """
+        url_name = urllib.quote(name)
+        return requests.get("https://speedrun.com/api/v1/games?name="+url_name)
+
+    def _get_game_id_request(self,id,suffix=""):
+        """
+        Returns a request for info on a certain game on speedrun.com.
+
+        "id" is the game's ID on SRC, and "suffix" is the rest of the request
+        after the ID if the request wants specific info (it usually does)
+        """
+        if suffix == None:
+            suffix = ""
+        return requests.get("https://speedrun.com/api/v1/games/"+id+suffix)
+
+    def _get_user_id_request(self,id,suffix=""):
+        if suffix == None:
+            suffix = ""
+        return requests.get("https://speedrun.com/api/v1/users/"+id+suffix)
+
+    def _get_game_id(self,name):
+        if name in self.gamecache:
+            return self.gamecache[name]
+        requestdata = self._get_game_name_request(name).json()['data']
+        if len(requestdata) == 0:
+            return None
+        id = requestdata[0]['id']
+        self.gamecache[name] = id
+        return id
+
+    def get_top_times(self,gamename):
+        id = self._get_game_id(gamename)
+        if id == None:
+            return None
+        return self._get_game_id_request(id,"/records").json()['data'][0]['runs']
+
+    def get_username(self,userid):
+        return self._get_user_id_request(userid).json()['data']['names']['international']

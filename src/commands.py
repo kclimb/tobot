@@ -64,6 +64,66 @@ def saygame(api_mgr):
 	"""
 	return 'Game is: '+api_mgr.get_stream_game()
 
+def wr(twitch_api_mgr, src_api_mgr):
+	"""
+	Kinda gets the wr of the current game. Needs Twitch API access.
+	"""
+	game_name = twitch_api_mgr.get_stream_game()
+	runs = src_api_mgr.get_top_times(game_name)
+	if runs == None or len(runs) == 0:
+		return "it doesn't matter :)"
+
+	times = []
+	players = []
+	for guy in runs:
+		times.append(guy['run']['times']['primary_t'])
+		players.append([x['id'] for x in guy['run']['players']])
+	avg = sum(times)/len(times)
+
+	minrange = min(times[0]/float(avg),0.95)
+	maxrange = max(times[-1]/float(avg),1.05)
+
+	wrtime = random.randint(int(minrange*avg),int(maxrange*avg))
+	wrplayer = random.choice(players)
+	wrplayer = [src_api_mgr.get_username(x) for x in wrplayer]
+
+	timesec = wrtime%60
+	timemin = (wrtime/60)%60
+	timehour = wrtime/3600
+
+	if timehour > 0:
+		timestr = str(timehour)+":"
+		if timemin > 9:
+			timestr = timestr+str(timemin)+":"
+		else:
+			timestr = timestr+"0"+str(timemin)+":"
+		if timesec > 9:
+			timestr = timestr+str(timesec)
+		else:
+			timestr = timestr+"0"+str(timesec)
+	elif timemin > 0:
+		timestr = str(timemin)+":"
+		if timesec > 9:
+			timestr = timestr+str(timesec)
+		else:
+			timestr = timestr+"0"+str(timesec)
+	else:
+		timestr = str(timesec) + "seconds"
+
+	if len(wrplayer) == 0:
+		playerstr = "unknown runner"
+	elif len(wrplayer) == 1:
+		playerstr = wrplayer[0]
+	elif len(wrplayer) == 2:
+		playerstr = wrplayer[0]+" and "+wrplayer[1]
+	else:
+		playerstr = wrplayer[0]+", "
+		for i in range(1,len(wrplayer)-1):
+			playerstr = playerstr + wrplayer[i]+", "
+		playerstr = playerstr+"and "+wrplayer[-1]
+
+	return "World record is "+timestr+" by "+playerstr+"."
+
 def setgame(game, metadata, api_mgr):
 	# If this person isn't a mod or the broadcaster, do a !title instead
 	if not userIsModPlus(metadata):
@@ -164,11 +224,12 @@ def missing_end_quote_error():
 DEFAULT_COMMANDS = {
 	'!addcmd':addcmd,'!addgamename':addgamename,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
 	'!removecmd':removecmd,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
-	'!title':saytitle,
+	'!title':saytitle,'!wr':wr
 }
-DEFAULT_ARGC = {'!addcmd':2,'!addgamename':2,'!commands':0,'!dr':0,'!editcmd':2,'!editgamename':2,'!game':0,'!hello':1,'!removecmd':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,}
+DEFAULT_ARGC = {'!addcmd':2,'!addgamename':2,'!commands':0,'!dr':0,'!editcmd':2,'!editgamename':2,'!game':0,'!hello':1,'!removecmd':1,'!removegamename':1,'!setgame':1,'!settitle':1,'!title':0,'!wr':0,}
 NEEDS_METADATA = set([setgame,settitle,addcmd,addgamename,editcmd,editgamename,removecmd,removegamename])
-NEEDS_API = set([saygame, saytitle, setgame, settitle])
+NEEDS_TWITCH_API = set([saygame, saytitle, setgame, settitle, wr])
+NEEDS_SRC_API = set([wr])
 
 # Other handy data things
 DANGAN = ['danger', 'doggone', 'draugr', 'dagnabbit', 'dungeon', 'drumbo', 'dagger', 'dansgame', 'daenerys', 'dungarees', 'dunsparce', 'diego', 'dang', 'dragon']
