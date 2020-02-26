@@ -239,6 +239,18 @@ class InsecureMyRCClient(IRCClient):
 		self.channels.remove(chan)
 
 
+class PubSubClient:
+	def __init__(self):
+		self.lastping = time.time()
+
+	def ping(self):
+		"""
+		Tell Twitch we're still here.
+		"""
+		self.socket.sendall('PING\n'.encode('utf-8'))
+		if self.verbose:
+			print 'PubSub ping'
+
 #f = open('mydata.txt')
 #oauth = f.read()
 #c = InsecureMyRCClient(oauth)
