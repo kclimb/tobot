@@ -265,11 +265,14 @@ class SpeedrunComAPIManager:
         self.gamecache[name] = id
         return id
 
-    def get_top_times(self,gamename):
+    def get_top_times(self,gamename,cat_num=0):
         id = self._get_game_id(gamename)
         if id == None:
             return None
-        return self._get_game_id_request(id,"/records").json()['data'][0]['runs']
+        rundata = self._get_game_id_request(id,"/records").json()['data']
+        if len(rundata) <= cat_num:
+            cat_num = 0 # If provided category number doesn't exist, default to the first one
+        return rundata[cat_num]['runs']
 
     def get_username(self,userid):
         return self._get_user_id_request(userid).json()['data']['names']['international']

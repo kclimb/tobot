@@ -64,12 +64,12 @@ def saygame(api_mgr):
 	"""
 	return 'Game is: '+api_mgr.get_stream_game()
 
-def wr(twitch_api_mgr, src_api_mgr):
+def wr(twitch_api_mgr, src_api_mgr, cat_num=0):
 	"""
 	Kinda gets the wr of the current game. Needs Twitch API access.
 	"""
 	game_name = twitch_api_mgr.get_stream_game()
-	runs = src_api_mgr.get_top_times(game_name)
+	runs = src_api_mgr.get_top_times(game_name, cat_num)
 	if runs == None or len(runs) == 0:
 		return "it doesn't matter :)"
 
@@ -122,7 +122,7 @@ def wr(twitch_api_mgr, src_api_mgr):
 			playerstr = playerstr + wrplayer[i]+", "
 		playerstr = playerstr+"and "+wrplayer[-1]
 
-	return "World record is "+timestr+" by "+playerstr+"."
+	return "World record in " + game_name + " is "+timestr+" by "+playerstr+"."
 
 def setgame(game, metadata, api_mgr):
 	# If this person isn't a mod or the broadcaster, do a !title instead
