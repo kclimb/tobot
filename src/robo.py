@@ -23,10 +23,10 @@ class Robo:
 			if succ:
 				self.running = True
 			else:
-				print 'ERROR when starting robo :('
+				print('ERROR when starting robo :(')
 				self.running = False
 		elif self.verbose:
-			print "already running, can't start"
+			print("already running, can't start")
 
 	def stop(self):
 		self.running = False
@@ -37,31 +37,31 @@ class Robo:
 		if self.running:
 			self.client.send_message(message, isprivmsg)
 		elif self.verbose:
-			print "Robo not running. Can't send message."
+			print("Robo not running. Can't send message.")
 
 	def recv(self):
 		if self.running:
 			data = self.client.recv()
 			if self.verbose:
-				print 'data passed back from client'
+				print('data passed back from client')
 			if 'ctrlc' in data and 'badges=broadcaster' in data[:data.index(' ')]:
 				return -1
 			self.handler.update_msg_queue(data)
 		elif self.verbose:
-			print "Robo not running. Can't receive message."
+			print("Robo not running. Can't receive message.")
 		return ""
 
 	def process(self):
 		"""
 		Process the messages currently sitting in the message queue
 		"""
-		# print 'robo processing'
+		# print('robo processing')
 		while not self.handler.queue_empty():
 			responses,isprivmsg = self.handler.process_msg()
 			for resp in responses:
 				self.send(resp, isprivmsg)
 		if self.verbose:
-			print "Finished processing messages"
+			print("Finished processing messages")
 		return ""
 
 	def isrunning(self):

@@ -48,8 +48,8 @@ class MapParser(Parser):
 			errorcmd[0] = the command function to run
 			errorcmd[1] = a list of parameters to errorcmd[0]
 		"""
-		print 'ERROR: not enough args passed to last command'
-		print 'Removing command from command list'
+		print('ERROR: not enough args passed to last command')
+		print('Removing command from command list')
 		commands[-1] = errorcmd
 		return commands
 
@@ -102,7 +102,7 @@ class MapParser(Parser):
 									stop_num += 1 # Since each of these tokens doesn't count against our total parameters,
 												  # we need to push back the stop num
 									if token_num >= len(tokens):
-										print 'No endquote token found'
+										print('No endquote token found')
 										return self._parsing_error(cmnds, (commands.missing_end_quote_error, []))
 									append_arg = append_arg + " " + tokens[token_num]
 								append_arg = append_arg[:len(append_arg)-1]

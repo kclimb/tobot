@@ -6,7 +6,7 @@ SERV_HOST_NAME = 'irc.chat.twitch.tv'
 
 def main():
 	args = sys.argv
-	print args
+	print(args)
 	if len(args) <= 1:
 		f = open('mydata.txt')
 		opass = f.read()
@@ -19,7 +19,7 @@ def main():
 		if r.recv() == -1:      # Wait for incoming data
 			break
 		if not r.client.is_connected: # If we disconnect while reading data, try rebooting
-			print "Client was disconnected. Attempting to reboot..."
+			print("Client was disconnected. Attempting to reboot...")
 			r.stop()
 			r.start()
 			continue

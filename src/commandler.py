@@ -190,7 +190,7 @@ class Handler:
 			cmd_result = self.eval(cmd[0],cmd[1])
 			if cmd_result != None and cmd_result != "":
 				responses.append(cmd_result)
-		print 'responses:', responses
+		print('responses:', responses)
 		return responses
 
 	def _generate_responses(self, data):
@@ -237,7 +237,7 @@ class Handler:
 			return self._generate_responses(data)
 		else:
 			if self.verbose:
-				print 'Nothing currently in message queue'
+				print('Nothing currently in message queue')
 			return ([],True)
 
 	def update_msg_queue(self, sockstream):
@@ -259,7 +259,7 @@ class Handler:
 			# Add all the other messages to the queue
 			for msg in msgs[1:]:
 				self.msg_q.append(msg)
-			print 'Length of message queue:', len(self.msg_q)
+			print('Length of message queue:', len(self.msg_q))
 
 	def queue_empty(self):
 		"""
