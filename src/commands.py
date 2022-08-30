@@ -68,6 +68,8 @@ def wr(twitch_api_mgr, src_api_mgr, cat_num=0):
 	"""
 	Kinda gets the wr of the current game. Needs Twitch API access.
 	"""
+	return "temporarily disabled"
+
 	game_name = twitch_api_mgr.get_stream_game()
 	runs = src_api_mgr.get_top_times(game_name, cat_num)
 	if runs == None or len(runs) == 0:
@@ -222,7 +224,7 @@ def missing_end_quote_error():
 # A default map of supported commands, and the corresponding number of user-supplied arguments for each command.
 # Note there may be more actual arguments that tobot needs to supply (from message headers, credentials, etc)
 DEFAULT_COMMANDS = {
-	'!addcmd':addcmd,'!addgamename':addgamename,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
+	'!addcmd':addcmd,'!addgamename':addgamename,'!delcmd':removecmd,'!dr':dr,'!editcmd':editcmd,'!editgamename':editgamename,'!game':saygame,'!hello':sayhello,
 	'!removecmd':removecmd,'!removegamename':removegamename,'!setgame':setgame,'!settitle':settitle,
 	'!title':saytitle,'!wr':wr
 }
