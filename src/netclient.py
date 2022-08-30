@@ -44,7 +44,7 @@ class InsecureMyRCClient(IRCClient):
 		"""
 		if chan in self.channels:
 			if self.verbose:
-				print 'Already in the specified channel'
+				print('Already in the specified channel')
 			return False
 		# Set up socket if it's our first connection
 		if not self.socket:
@@ -72,14 +72,14 @@ class InsecureMyRCClient(IRCClient):
 		"""
 		self.socket.sendall('PONG :tmi.twitch.tv\n'.encode('utf-8'))
 		if self.verbose:
-			print 'pong'
+			print('pong')
 
 	def recv(self, bufsize=None):
 		if bufsize == None:
 			bufsize = self.read_size
 		if self.is_connected:
 			if self.verbose:
-				print 'Listening for message...'
+				print('Listening for message...')
 			# Use select so that our client's recv blocks (or at least waits)
 			# regardless of whether the socket does
 			sock_ready = select.select([self.socket], [], [])
@@ -92,15 +92,15 @@ class InsecureMyRCClient(IRCClient):
 			# 	print '"' + guy + '"'
 			# print 'ms len =', len(ms)
 			if len(m) == 0:
-				print 'Error: disconnected from irc server!'
+				print('Error: disconnected from irc server!')
 				self.is_connected = False
 				# TODO: properly handle the disconnection
 			elif self.verbose:
-				print 'Message received:'
-				print repr(m), '\n'
+				print('Message received:')
+				print(repr(m), '\n')
 			return m
 		elif self.verbose:
-			print "Error: client currently not connected to channel. Can't receive messages"
+			print("Error: client currently not connected to channel. Can't receive messages")
 		return None
 
 	def refresh(self, chan):
@@ -117,7 +117,7 @@ class InsecureMyRCClient(IRCClient):
 	def send_message(self, message, isprivmsg=True, chan=DEFAULT_CHANNEL):
 		if self.is_connected:
 			if self.verbose:
-				print 'Sending message...'
+				print('Sending message...')
 			if chan in self.channels:
 				if isprivmsg:
 					self.socket.sendall('PRIVMSG #' + chan + ' :' + message + '\n')
@@ -125,14 +125,14 @@ class InsecureMyRCClient(IRCClient):
 					self.socket.sendall(message)
 				#m = self.socket.recv(self.read_size).decode()
 				if self.verbose:
-					print 'Successfully sent message ' + message
+					print('Successfully sent message ' + message)
 					#print 'Received response ' + m
 				self.numwrites += 1
 				return True
 			elif self.verbose:
-				print 'Error: client not currently connected to channel: ' + chan
+				print('Error: client not currently connected to channel: ' + chan)
 		if self.verbose:
-			print 'Error: client currently not connected to channel. Message not sent'
+			print('Error: client currently not connected to channel. Message not sent')
 		return False
 
 	def sethostname(self, newname):
@@ -140,7 +140,7 @@ class InsecureMyRCClient(IRCClient):
 			# TODO: Raise "Bot is running" exception instead
 			e = "Error: could not change hostname because client is already connected to a server."
 			e += '\nPlease disconnect from the current server to change the hostname.'
-			print e
+			print(e)
 		else:
 			self.hostname = newname
 
@@ -160,30 +160,30 @@ class InsecureMyRCClient(IRCClient):
 		# First, connect to twitch server with our credentials
 		sock.sendall('PASS oauth:' + self.oauth + '\nNICK tobot\n') # TODO: generalize bot name stuff
 		if self.verbose:
-			print 'receiving login response...'
+			print('receiving login response...')
 		x = sock.recv(1024)
 		if self.verbose:
-			print 'login response received.'
-			print x
-			print 'requesting membership...'
+			print('login response received.')
+			print(x)
+			print('requesting membership...')
 		sock.sendall('CAP REQ :twitch.tv/membership\n')
 		x = sock.recv(1024)
 		if self.verbose:
-			print 'received membership.'
-			print x
-			print 'requesting tags...'
+			print('received membership.')
+			print(x)
+			print('requesting tags...')
 		sock.sendall('CAP REQ :twitch.tv/tags\n')
 		x = sock.recv(1024)
 		if self.verbose:
-			print 'received tags.'
-			print x
-			print 'requesting commands...'
+			print('received tags.')
+			print(x)
+			print('requesting commands...')
 		sock.sendall('CAP REQ :twitch.tv/commands\n')
 		x = sock.recv(1024)
 		if self.verbose:
-			print 'received commands.'
-			print x
-			print 'Login successful.'
+			print('received commands.')
+			print(x)
+			print('Login successful.')
 
 	def _make_and_login(self):
 		"""
@@ -192,10 +192,10 @@ class InsecureMyRCClient(IRCClient):
 		"""
 		new_socket = self._make_socket()
 		if not new_socket:
-			print 'ERROR creating socket'
+			print('ERROR creating socket')
 			return
 		if self.verbose:
-			print 'Connected to ' + str(new_socket.getpeername())
+			print('Connected to ' + str(new_socket.getpeername()))
 		self._twitch_login(new_socket)
 		return new_socket
 
@@ -205,17 +205,17 @@ class InsecureMyRCClient(IRCClient):
 		joins a given channel.
 		"""
 		if chan in self.channels:
-			print 'Error: tobot is already in channel: ' + chan
+			print('Error: tobot is already in channel: ' + chan)
 			return
 		if self.verbose:
-			print 'Joining channel ' + chan + '...'
+			print('Joining channel ' + chan + '...')
 		sock.sendall('JOIN #' + chan + '\n')
 		for i in xrange(2):
 			x = sock.recv(1024)
 			if self.verbose:
-				print x
+				print(x)
 		if self.verbose:
-			print 'Successfully joined #' + chan + '.'
+			print('Successfully joined #' + chan + '.')
 		self.channels.add(chan)
 		if sock is self.socket:
 			self.is_connected = True
@@ -226,16 +226,16 @@ class InsecureMyRCClient(IRCClient):
 		has the socket depart that channel.
 		"""
 		if chan not in self.channels:
-			print 'Error: tobot already not in channel: ' + chan
+			print('Error: tobot already not in channel: ' + chan)
 			return
 		if self.verbose:
-			print 'Departing from channel ' + chan + '...'
+			print('Departing from channel ' + chan + '...')
 		self.is_connected = False	# Disable connection if necessary
 		sock.sendall('PART #' + chan + '\n')	# This is the Leave IRC command
 		m = sock.recv(self.read_size)
 		if m != None and self.verbose:
-			print 'Successfully left #' + chan + '.'
-			print 'Part response: ' + m
+			print('Successfully left #' + chan + '.')
+			print('Part response: ' + m)
 		self.channels.remove(chan)
 
 
@@ -249,7 +249,7 @@ class PubSubClient:
 		"""
 		self.socket.sendall('PING\n'.encode('utf-8'))
 		if self.verbose:
-			print 'PubSub ping'
+			print('PubSub ping')
 
 #f = open('mydata.txt')
 #oauth = f.read()

@@ -66,7 +66,7 @@ class ListBuffer:
 			# acquired cond_empty. Therefore, only the thread holding cond_empty
 			# can possibly wait to acquire cond_full, which it will receive when
 			# the current thread is done with cond_full on the next line
-			print 'Full!'
+			print('Full!')
 			self.cond_full.wait()
 
 		self.buf.append(item)
@@ -77,7 +77,7 @@ class ListBuffer:
 		self.cond_empty.acquire()
 
 		while len(self.buf) == 0:
-			print 'Empty!'
+			print('Empty!')
 			self.cond_empty.wait()
 
 		elem = self.buf.pop(0)
@@ -102,7 +102,7 @@ def tthread(buf):
 				# buf.cond_empty.acquire()
 				# buf.cond_empty.notifyAll()
 				# buf.cond_empty.release()
-			print x
+			print(x)
 
 makers = []
 takers = []

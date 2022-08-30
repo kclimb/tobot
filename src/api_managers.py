@@ -24,7 +24,7 @@ class TwitchAPIManager:
                 f.close()
             except:
                 if v:
-                    print 'ERROR: could not find twitchapiauth.txt'
+                    print('ERROR: could not find twitchapiauth.txt')
                 auth = ''
         self.authcode = auth
         self.token = ''
@@ -36,13 +36,13 @@ class TwitchAPIManager:
         f.close()
 
     def _print_error_message(self, response):
-        print 'Status:',response.status_code
+        print('Status:',response.status_code)
         try:
-            print response.json()
+            print(response.json())
         except ValueError: # Catch responses in non-json format
-            print 'URL:',response.url
-            print 'Text:',response.text
-        print ''
+            print('URL:',response.url)
+            print('Text:',response.text)
+        print('')
 
     ############################# ACCESS TOKEN THINGS #############################
 
@@ -58,7 +58,7 @@ class TwitchAPIManager:
             success = True
             self.token = resp.json()['access_token']
         elif self.verbose:
-            print 'ERROR failed to acquire access token'
+            print('ERROR failed to acquire access token')
             self._print_error_message(resp)
         return success
 
@@ -73,7 +73,7 @@ class TwitchAPIManager:
         if success:
             self.token = ''
         elif self.verbose:
-            print 'ERROR on revoking access token'
+            print('ERROR on revoking access token')
             self._print_error_message(resp)
         return success
 
@@ -83,11 +83,11 @@ class TwitchAPIManager:
         and refresh token on success.
         """
         if self.verbose:
-            print 'REFRESHING...'
+            print('REFRESHING...')
         resp = requests.post('https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.authcode)
         success = resp.status_code == requests.codes.ok
         if self.verbose:
-            print resp.status_code
+            print(resp.status_code)
         if success:
             jresp = resp.json()
             f = open('user_access.txt', 'w')
@@ -99,7 +99,7 @@ class TwitchAPIManager:
             self.user_refresh_token = jresp['refresh_token']
             f.close()
         elif self.verbose:
-            print 'ERROR on user token refresh:'
+            print('ERROR on user token refresh:')
             self._print_error_message(resp)
         return success
 
@@ -129,13 +129,13 @@ class TwitchAPIManager:
                 #    print guy
                 #print ''
                 if self.verbose:
-                    print resp.json()
-                    print ''
+                    print(resp.json())
+                    print('')
                 #if 'WWW-Authenticate' in resp.headers: # Twitch claims this check is necessary but seems currently unimplemented on their side?
                 need_refresh = True
                 self._refresh_user_token()
             elif self.verbose:
-                print 'ERROR while setting stream title'
+                print('ERROR while setting stream title')
                 self._print_error_message(resp)
         return success
 

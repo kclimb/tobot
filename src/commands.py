@@ -40,7 +40,7 @@ def userIsModPlus(metadata):
 		channel = metadata['channel']
 		return channel == hdrs['display-name'].lower() or hdrs['mod'] != 0
 	except KeyError:
-		print 'ERROR: Missing key from metadata'
+		print('ERROR: Missing key from metadata')
 	return False
 
 def settitle(title, metadata, api_mgr):
