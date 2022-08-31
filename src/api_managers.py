@@ -84,11 +84,16 @@ class TwitchAPIManager:
         """
         if self.verbose:
             print('REFRESHING...')
-        resp = requests.post('https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.authcode)
-        success = resp.status_code == requests.codes.ok
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        data = 'grant_type=refresh_token&refresh_token='+self.user_refresh_token+'&client_id='+self.clientid+'&client_secret='+self.authcode
+
+        resp = requests.post('https://id.twitch.tv/oauth2/token', headers=headers, data=data)
         if self.verbose:
             print(resp.status_code)
-        if success:
+            print(resp.json())
+        if resp.status_code == requests.codes.ok or resp.status_code == requests.codes.no_content:
             jresp = resp.json()
             f = open('user_access.txt', 'w')
             f.write(jresp['access_token'])
@@ -117,11 +122,27 @@ class TwitchAPIManager:
         plug the request into this function to guarantee it doesn't fail due to
         an expired token.
         """
+        resp = self._request_send_loop_get_response(request_func, params)
+        success = resp.status_code == requests.codes.ok or resp.status_code == requests.codes.no_content
+        return success
+
+    def _request_send_loop_get_response(self, request_func, params):
+        """
+        Repeats a request function until it definitively succeeds or fails.
+
+        In practice, this loop should succeed on the first pass, unless the
+        current user OAuth token is expired, in which case a refresh is performed,
+        and the request should succeed on the second pass.
+
+        All commands which send requests that supply a user OAuth token should
+        plug the request into this function to guarantee it doesn't fail due to
+        an expired token.
+        """
         need_refresh = True
         while need_refresh:
             need_refresh = False
             resp = request_func(*params)
-            success = resp.status_code == requests.codes.ok
+            success = resp.status_code == requests.codes.ok or resp.status_code == requests.codes.no_content
             if success:
                 pass
             elif resp.status_code == 401: #401 = Unauthorized, which COULD mean our token's just expired
@@ -137,13 +158,13 @@ class TwitchAPIManager:
             elif self.verbose:
                 print('ERROR while setting stream title')
                 self._print_error_message(resp)
-        return success
+        return resp
 
     def _update_channel_request(self, channelid, headers, data):
         """
-        Sends a PUT request for user channel data.
+        Sends a PATCH request for user channel data.
         """
-        return requests.put('https://api.twitch.tv/kraken/channels/'+channelid, headers=headers, data=data)
+        return requests.patch('https://api.twitch.tv/helix/channels?broadcaster_id='+channelid, headers=headers, data=data)
 
     def _get_channel_request(self):
         """
@@ -151,9 +172,16 @@ class TwitchAPIManager:
         """
         headers = {
             'Client-ID': self.clientid,
-            'Accept': 'application/vnd.twitchtv.v5+json',
+            'Authorization': 'Bearer ' + self.user_token,
         }
-        return requests.get('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers)
+        return requests.get('https://api.twitch.tv/helix/channels?broadcaster_id='+TOBURR_USER_ID, headers=headers)
+
+    def _get_gameid_request(self, gamename, headers):
+        """
+        Sends a GET request to get a game's internal ID from its name.
+        header
+        """
+        return requests.get("https://api.twitch.tv/helix/games?name="+gamename,headers=headers)
 
     ############################ COMMAND LOGIC #####################################
 
@@ -164,11 +192,11 @@ class TwitchAPIManager:
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
-            'Authorization': 'OAuth ' + self.user_token,
+            'Authorization': 'Bearer ' + self.user_token,
             'Content-Type': 'application/json',
         }
 
-        data = '{"channel": {"status": "'+title+'"}}'
+        data = '{"title": "'+title+'"}'
         return self._update_channel_request(TOBURR_USER_ID, headers, data)
 
     def set_stream_title(self, title):
@@ -177,36 +205,51 @@ class TwitchAPIManager:
         """
         return self._request_send_loop(self._do_set_stream_title_request, [title])
 
-    def _do_set_stream_game_request(self, game):
+    def _do_set_stream_game_request(self, gameid):
         """
         Sends request for !setgame
         """
         headers = {
             'Client-ID': self.clientid,
             'Accept': 'application/vnd.twitchtv.v5+json',
-            'Authorization': 'OAuth ' + self.user_token,
+            'Authorization': 'Bearer ' + self.user_token,
             'Content-Type': 'application/json',
         }
-        data = '{"channel": {"game": "'+game+'"}}'
-        return requests.put('https://api.twitch.tv/kraken/channels/'+TOBURR_USER_ID, headers=headers, data=data)
+        data = '{"game_id": "'+gameid+'"}'
+        return self._update_channel_request(TOBURR_USER_ID, headers, data)
 
     def set_stream_game(self, game):
         """
         Entry point for !setgame
         """
-        return self._request_send_loop(self._do_set_stream_game_request, [game])
+        headers = {
+            'Client-ID': self.clientid,
+            'Authorization': 'Bearer ' + self.user_token,
+        }
+        gameid_response = self._request_send_loop_get_response(self._get_gameid_request, [game, headers])
+
+        if gameid_response.status_code < 300 and gameid_response.status_code >= 200: # we got some type of success
+            gameid = gameid_response.json()['data'][0]['id']
+        else:
+            print("ERROR in fetching gameid")
+            return False
+        
+        return self._request_send_loop(self._do_set_stream_game_request, [gameid])
 
     def get_stream_title(self):
         """
         Entry point for !title
         """
-        return self._get_channel_request().json()['status']
+        resp = self._request_send_loop_get_response(self._get_channel_request, [])
+        return resp.json()['data'][0]['title']
 
     def get_stream_game(self):
         """
         Entry point for !game
         """
-        return self._get_channel_request().json()['game']
+        resp = self._request_send_loop_get_response(self._get_channel_request, [])
+        print(resp.json())
+        return resp.json()['data'][0]['game_name']
 
     #################################### MISC ######################################
 
